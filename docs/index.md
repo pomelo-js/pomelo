@@ -14,5 +14,5 @@ hero:
       link: /introduction
     - theme: alt
       text: GitHub
-      link: https://github.com/Azzellz/pomelo
+      link: https://github.com/pomelo-js/pomelo
 ---

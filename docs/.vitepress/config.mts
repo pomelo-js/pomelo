@@ -36,7 +36,7 @@ export default defineConfig({
         // ],
 
         socialLinks: [
-            { icon: "github", link: "https://github.com/Azzellz/pomelo" },
+            { icon: "github", link: "https://github.com/pomelo-js/pomelo" },
         ],
     },
 });

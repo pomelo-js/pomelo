@@ -20,4 +20,4 @@ Currently, the built-in support for RSS includes the following:
 
 ## License
 
-pomelo source is licensed under the [GNU AGPLv3](https://github.com/Azzellz/pomelo/blob/main/LICENSE).
+pomelo source is licensed under the [GNU AGPLv3](https://github.com/pomelo-js/pomelo/blob/main/LICENSE).
