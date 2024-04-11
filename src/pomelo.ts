@@ -6,13 +6,12 @@ import { errorLog, successLog, warnLog } from "./utils/log";
 import type {
     PomeloTaskContext,
     PomeloConfig,
-    PomeloProcessContext,
+    PomeloMatchContext,
     PomeloRuleContext,
     PomeloRecord,
     PomeloPlugin,
 } from "./models";
-import { processResource } from "./resource";
-import { createRule } from "./rule";
+import { createRule, matchRule } from "./rule";
 import {
     checkConfig,
     loadConfig,
@@ -223,32 +222,56 @@ async function _init({
 }
 
 async function _task(context: PomeloTaskContext) {
-    const { config } = context;
+    const { config, plugins } = context;
 
-    //获取RSS并且记录耗时
+    //获取resource并且记录耗时
     successLog("get resource from " + config.resource.url);
-    console.time("1.get resource");
+    console.time("get resource");
     const resource = await getResourceString(config.resource);
-    console.timeEnd("1.get resource");
+    console.timeEnd("get resource");
 
-    //遍历规则集
-    Object.entries(config.rules).forEach(async ([ruleName, ruleJSON]) => {
-        const ruleContext: PomeloRuleContext = {
-            ruleUnit: {
-                ...ruleJSON,
-                name: ruleName,
-            },
-            ...context,
-        };
-        const rule = createRule(ruleContext);
-
-        const processContext: PomeloProcessContext = {
-            resource,
-            rule,
-            ...context,
-        };
-        await processResource(processContext);
+    //处理resource
+    let parser: PomeloPlugin["parser"] = config.resource.parser;
+    let worker: PomeloPlugin["worker"] = config.resource.worker;
+    plugins.forEach((p) => {
+        parser = p.parser;
+        worker = p.worker;
     });
+    if (parser && worker) {
+        //parse要放外面,避免重复
+        const parsed = await parser(resource);
+        if (!parsed) throw "the parser dont return valid analytic product";
+
+        //遍历规则集
+        Object.entries(config.rules).forEach(async ([name, unit]) => {
+            const ruleContext: PomeloRuleContext = {
+                ruleUnit: {
+                    ...unit,
+                    name,
+                },
+                ...context,
+            };
+            const rule = createRule(ruleContext);
+
+            plugins.forEach((p) => p.onBeforeParse?.());
+            rule.onBeforeParse?.();
+
+            const matchContext: PomeloMatchContext = {
+                resource,
+                rule,
+                ...context,
+            };
+
+            await worker!(parsed, async (content, link) => {
+                await matchRule({ ...matchContext, content, link });
+            });
+
+            plugins.forEach((p) => p.onParsed?.());
+            rule.onParsed?.();
+        });
+    } else {
+        throw "please support right parser and worker!";
+    }
 }
 
 export async function createPomelo({

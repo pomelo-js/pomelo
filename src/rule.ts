@@ -1,7 +1,7 @@
 import { postDownloadRequest } from "./api";
 import { errorLog, successLog, warnLog } from "./utils/log";
 import type {
-    PomeloProcessContext,
+    PomeloMatchContext,
     PomeloRuleContext,
     PomeloRule,
     RuleHandlerOption,
@@ -11,7 +11,7 @@ import { getResourceString as _getResource } from "./api";
 import { isRegExpOption } from "./utils";
 
 export async function matchRule<T extends { content: string; link: string }>(
-    context: PomeloProcessContext & T
+    context: PomeloMatchContext & T
 ) {
     const { content, link, record, rule, plugins } = context;
 

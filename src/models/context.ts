@@ -11,7 +11,7 @@ export type PomeloRuleContext = {
     } & PomeloRuleUnit;
 } & PomeloCommonContext;
 
-export type PomeloProcessContext = {
+export type PomeloMatchContext = {
     resource: string;
     rule: PomeloRule;
 } & PomeloCommonContext;
