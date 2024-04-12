@@ -1,4 +1,4 @@
-# pomelo (Yuzu)
+# pomelo
 
 Based on Bun/Nodejs, pomelo is a resource parsing tool with flexible configurations. It supports various types of resources. Most of the functionality is inspired by [Flexget](https://github.com/Flexget/Flexget).
 
