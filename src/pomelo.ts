@@ -243,7 +243,8 @@ async function _task(context: PomeloTaskContext) {
         if (!parsed) throw "the parser dont return valid analytic product";
 
         //遍历规则集
-        Object.entries(config.rules).forEach(async ([name, unit]) => {
+        //这里不需要await,不然会出现规则匹配顺序异常
+        Object.entries(config.rules).forEach(([name, unit]) => {
             const ruleContext: PomeloRuleContext = {
                 ruleUnit: {
                     ...unit,
@@ -262,8 +263,8 @@ async function _task(context: PomeloTaskContext) {
                 ...context,
             };
 
-            await worker!(parsed, async (content, link) => {
-                await matchRule({ ...matchContext, content, link });
+            worker!(parsed, (content, link) => {
+                matchRule({ ...matchContext, content, link });
             });
 
             plugins.forEach((p) => p.onParsed?.());

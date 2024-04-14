@@ -10,7 +10,7 @@ import type {
 import { getResourceString as _getResource } from "./api";
 import { isRegExpOption } from "./utils";
 
-export async function matchRule<T extends { content: string; link: string }>(
+export function matchRule<T extends { content: string; link: string }>(
     context: PomeloMatchContext & T
 ) {
     const { content, link, record, rule, plugins } = context;
@@ -25,7 +25,7 @@ export async function matchRule<T extends { content: string; link: string }>(
     //再匹配接受条件
     if (rule.accept && rule.accept(content)) {
         plugins.forEach((p) => p.onAccepted?.(content, link));
-        await rule.onAccepted?.(content, link, record);
+        rule.onAccepted?.(content, link, record);
         return true;
     }
 
