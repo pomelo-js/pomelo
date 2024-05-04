@@ -10,22 +10,23 @@ import type {
 import { getResourceString as _getResource } from "./api";
 import { isRegExpOption } from "./utils";
 
+//规则匹配器
 export function matchRule<T extends { content: string; link: string }>(
     context: PomeloMatchContext & T
 ) {
-    const { content, link, record, rule, plugins } = context;
+    const { content, link, rule, plugins } = context;
 
     //先匹配拒绝条件
     if (rule.reject && rule.reject(content)) {
         plugins.forEach((p) => p.onRejected?.(content, link));
-        rule.onRejected?.(content, link, record);
+        rule.onRejected?.(content, link);
         return false;
     }
 
     //再匹配接受条件
     if (rule.accept && rule.accept(content)) {
         plugins.forEach((p) => p.onAccepted?.(content, link));
-        rule.onAccepted?.(content, link, record);
+        rule.onAccepted?.(content, link);
         return true;
     }
 
@@ -33,6 +34,7 @@ export function matchRule<T extends { content: string; link: string }>(
     return false;
 }
 
+//创建匹配器
 function createMatcher(optss: RuleHandlerOption): PomeloHandler | undefined {
     if (typeof optss === "function") {
         return (content: string) => optss(content);
@@ -58,15 +60,14 @@ function createMatcher(optss: RuleHandlerOption): PomeloHandler | undefined {
     }
 }
 
+//创建规则
 export function createRule(context: PomeloRuleContext): PomeloRule {
     const {
         config,
         ruleUnit,
         onlyRecord = false,
         intervalTimeCount,
-        recordItem,
         record,
-        deleteItem,
         downloadMap,
     } = context;
     return {
@@ -74,33 +75,24 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
         option: ruleUnit.option,
         accept: createMatcher(ruleUnit.accept),
         reject: createMatcher(ruleUnit.reject),
-        async onAccepted(content: string, link: string) {
+        async onAccepted(title: string, link: string) {
+            //判断是否已经下载过了
             if (downloadMap[link]) {
-                warnLog(content + " has been downloaded but accepted");
-                return;
+                return warnLog(title + " has been downloaded but accepted");
             }
-
-            if (config.record && record) {
-                const recordUnit = record.accepted[content];
-                const secondStamp = Math.floor(Date.now() / 1000);
-                //判断是否存在记录并且发送下载请求成功
-                if (recordUnit) {
-                    //判断过期
-                    if (
-                        !recordUnit.expired ||
-                        recordUnit.expired > secondStamp
-                    ) {
-                        //说明没过期,直接退出
-                        return warnLog(
-                            `checked [record]: ${content} when accepted, post download request will be skipped.`
-                        );
-                    }
-                }
+            //判断是否存在有效记录
+            if (record.accepted.isValid("link", link)) {
+                return warnLog(
+                    `checked [record]: ${title} when accepted, post download request will be skipped.`
+                );
             }
+            //执行下载和记录
             try {
                 //打印接受日志
-                successLog(`accept ${content} by [rule]: ${ruleUnit.name}`);
-                recordItem("accepted", content);
+                successLog(`accept ${title} by [rule]: ${ruleUnit.name}`);
+                record.accepted.add("title", title);
+                record.accepted.add("link", link);
+
                 //判断是否仅需要记录
                 if (!onlyRecord) {
                     console.time("3.post download request to aria2 --" + link);
@@ -116,32 +108,24 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                     );
                 }
             } catch (error) {
-                deleteItem("accepted", content);
+                //出现错误要重置之前的操作
+                record.accepted.delete("title", title);
+                record.accepted.delete("link", link);
                 downloadMap[link] = false;
                 errorLog(
-                    `post download request failed!\nitem: ${content}\nerror: ${error}`
+                    `post download request failed!\nitem: ${title}\nerror: ${error}`
                 );
             }
         },
-        onRejected(content: string) {
-            if (config.record?.expire && record) {
-                const recordUnit = record.rejected[content];
-                const secondStamp = Math.floor(Date.now() / 1000);
-                //判断是否存在记录
-                if (recordUnit) {
-                    if (
-                        !recordUnit.expired ||
-                        recordUnit.expired > secondStamp
-                    ) {
-                        //说明没过期,直接退出
-                        return warnLog(
-                            `checked [record]: ${content} when rejected, download request will be skipped.`
-                        );
-                    }
-                }
+        onRejected(title: string, link: string) {
+            if (record.rejected.isValid("link", link)) {
+                return warnLog(
+                    `checked [record]: ${title} when rejected, download request will be skipped.`
+                );
             }
-            successLog(`reject ${content} by [rule]: ${ruleUnit.name}`);
-            recordItem("rejected", content);
+            successLog(`reject ${title} by [rule]: ${ruleUnit.name}`);
+            record.rejected.add("title", title);
+            record.rejected.add("link", link);
         },
         onBeforeParse() {
             console.time("2.match rule--" + ruleUnit.name);

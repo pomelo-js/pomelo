@@ -2,9 +2,9 @@ import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { load as loadYaml } from "js-yaml";
 import { PomeloConfig } from "../models/config";
-import { PomeloRecord } from "../models/record";
+import { PomeloRecordMap } from "../models/record";
 
-//加载配置文件,支持四种
+//加载配置文件,支持五种
 export async function loadConfig(path: string): Promise<PomeloConfig> {
     const tsConfigPath = path + "/pomelo.config.ts";
     if (existsSync(tsConfigPath)) {
@@ -43,19 +43,25 @@ export async function loadConfig(path: string): Promise<PomeloConfig> {
 }
 
 //加载记录文件
-export async function loadRecord(path: string): Promise<PomeloRecord> {
+export async function loadRecord(path: string): Promise<PomeloRecordMap> {
+    const emptyRecord: PomeloRecordMap = {
+        accepted: {
+            title: {},
+            link: {},
+        },
+        rejected: {
+            title: {},
+            link: {},
+        },
+    };
     const recordPath = path + "/__record.json";
     if (existsSync(recordPath)) {
         const record = (await import(recordPath)).default;
         return {
-            accepted: {},
-            rejected: {},
+            ...emptyRecord,
             ...record,
         };
     } else {
-        return {
-            accepted: {},
-            rejected: {},
-        };
+        return { ...emptyRecord };
     }
 }

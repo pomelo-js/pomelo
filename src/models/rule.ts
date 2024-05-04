@@ -1,5 +1,4 @@
 import { PomeloConfig } from "./config";
-import { PomeloRecord } from "./record";
 
 export type PomeloHandler = (content: string) => boolean;
 export interface PomeloRule {
@@ -10,12 +9,8 @@ export interface PomeloRule {
     reject?: PomeloHandler;
     onBeforeParse?: () => void;
     onParsed?: () => void;
-    onAccepted?: (
-        content: string,
-        link: string,
-        record?: PomeloRecord
-    ) => Promise<void>;
-    onRejected?: (content: string, link: string, record?: PomeloRecord) => void;
+    onAccepted?: (title: string, link: string) => Promise<void>;
+    onRejected?: (title: string, link: string) => void;
 }
 
 export type PomeloRuleMap = {
