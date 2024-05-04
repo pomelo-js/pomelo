@@ -56,7 +56,6 @@ async function _init({
                 record = new PomeloRecord(config, configPath, recordMap);
             }
         }
-
         //#endregion
 
         //第一次执行时更新一次__record,删除过期的记录

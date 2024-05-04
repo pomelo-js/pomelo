@@ -26,26 +26,26 @@ class PomeloRecordPart {
         map: PomeloRecordPartMap = { ...emptyRecordPartMap }
     ) {
         this.config = config;
-        this.map = { ...map, ...emptyRecordPartMap };
+        this.map = { ...emptyRecordPartMap, ...map };
     }
     public delete(type: "title" | "link", key: string) {
         this.map[type][key] = void 0;
     }
     public add(type: "title" | "link", key: string) {
         const expired = this.config.record?.expire
-            ? parseToMillisecond(this.config.record.expire)
+            ? parseToMillisecond(this.config.record.expire) / 1000 //这里要转化成秒
             : 60 * 60 * 60;
         this.map[type][key] = this.createRecord(expired);
     }
     private createRecord(expired: number): RecordUnit {
         return {
-            expired: expired + Math.floor(Date.now() / 1000),
+            expired: expired + Math.floor(Date.now() / 1000), //秒时间戳
         };
     }
     //判断记录是否有效
     public isValid(type: "title" | "link", key: string): boolean {
         const expired = this.map[type][key]?.expired;
-        return expired ? expired <= Math.floor(Date.now() / 1000) : false;
+        return expired ? expired > Math.floor(Date.now() / 1000) : false;
     }
     public clean() {
         const newMap: PomeloRecordMap["accepted"] = {
