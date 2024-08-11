@@ -4,10 +4,10 @@ import type {
     PomeloRecordMap,
     PomeloRecordPartMap,
     RecordUnit,
-} from "./models";
-import { errorLog } from "./utils/log";
+} from "../models";
+import { errorLog } from "../utils/log";
 import { join } from "path";
-import { parseToMillisecond } from "./utils";
+import { parseToMillisecond } from "../utils";
 
 const emptyRecordPartMap = {
     title: {},
@@ -92,21 +92,6 @@ export class PomeloRecord {
     public clean() {
         this.accepted.clean();
         this.rejected.clean();
-        // if (log) {
-        //     const oldAcceptedCount =
-        //         _acceptedTitle.length + _acceptedLink.length;
-        //     const newAcceptedCount =
-        //         Object.entries(newAccepted.link).length +
-        //         Object.entries(newAccepted.title).length;
-        //     const oldRejectedCount =
-        //         _rejectedTitle.length + _rejectedLink.length;
-        //     const newRejectedCount =
-        //         Object.entries(newRejected.link).length +
-        //         Object.entries(newRejected.title).length;
-        //     successLog(
-        //         `the record was updated successfully! acceptd: ${oldAcceptedCount}--->${newAcceptedCount} rejected: ${oldRejectedCount}--->${newRejectedCount}`
-        //     );
-        // }
     }
     //保存
     public save() {

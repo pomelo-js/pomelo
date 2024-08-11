@@ -1,14 +1,14 @@
 import { postDownloadRequest } from "./api";
-import { errorLog, successLog, warnLog } from "./utils/log";
+import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloMatchContext,
     PomeloRuleContext,
     PomeloRule,
     RuleHandlerOption,
     PomeloHandler,
-} from "./models";
-import { getResourceString as _getResource } from "./api";
-import { isRegExpOption } from "./utils";
+} from "../models";
+import { getResourceString as _getResource } from "../utils";
+import { isRegExpOption } from "../utils";
 
 //规则匹配器
 export function matchRule<T extends { content: string; link: string }>(

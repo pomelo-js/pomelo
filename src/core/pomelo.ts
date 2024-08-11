@@ -1,6 +1,6 @@
 import { resolve } from "path";
 import { getResourceString } from "./api";
-import { errorLog, successLog, warnLog } from "./utils/log";
+import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloTaskContext,
     PomeloConfig,
@@ -8,16 +8,17 @@ import type {
     PomeloRuleContext,
     PomeloRecordMap,
     PomeloPlugin,
-} from "./models";
+} from "../models";
 import { createRule, matchRule } from "./rule";
 import {
     checkConfig,
     loadConfig,
     loadRecord,
     parseToMillisecond,
-} from "./utils";
+} from "../utils";
 import { PomeloRecord } from "./record";
 
+// 初始化
 async function _init({
     configMap,
     recordMap,
@@ -144,6 +145,7 @@ async function _init({
     }
 }
 
+// 任务上下文
 async function _task(context: PomeloTaskContext) {
     const { config, plugins } = context;
 
@@ -156,6 +158,7 @@ async function _task(context: PomeloTaskContext) {
     //处理resource
     let parser: PomeloPlugin["parser"] = config.resource.parser;
     let worker: PomeloPlugin["worker"] = config.resource.worker;
+    //遍历插件，只有最后一个配置的worker和parser会生效
     plugins.forEach((p) => {
         parser = p.parser;
         worker = p.worker;
@@ -186,7 +189,7 @@ async function _task(context: PomeloTaskContext) {
                 ...context,
             };
 
-            worker!(parsed, (content, link) => {
+            worker?.(parsed, (content, link) => {
                 matchRule({ ...matchContext, content, link });
             });
 

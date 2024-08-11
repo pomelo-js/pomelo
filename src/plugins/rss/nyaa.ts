@@ -5,30 +5,19 @@ export interface NyaaRSS {
             "xmlns:nyaa": string;
             version: string;
         };
-        channel: NyaaChannel[];
+        channel: NyaaRSSChannel[];
     };
 }
 
-
-interface NyaaChannel {
+export interface NyaaRSSChannel {
     title: string[];
     description: string[];
     link: string[];
     "atom:link": AtomLinkElement[];
-    item: NyaaItem[];
+    item: NyaaRSSItem[];
 }
 
-interface AtomLinkElement {
-    $: AtomLink;
-}
-
-interface AtomLink {
-    href: string;
-    rel: string;
-    type: string;
-}
-
-export interface NyaaItem {
+export interface NyaaRSSItem {
     title: string[];
     link: string[];
     guid: GUIDElement[];
@@ -44,6 +33,16 @@ export interface NyaaItem {
     "nyaa:trusted": Nyaa[];
     "nyaa:remake": Nyaa[];
     description: string[];
+}
+
+interface AtomLinkElement {
+    $: AtomLink;
+}
+
+interface AtomLink {
+    href: string;
+    rel: string;
+    type: string;
 }
 
 interface GUIDElement {
@@ -80,4 +79,20 @@ enum NyaaCategoryID {
 enum Nyaa {
     No = "No",
     Yes = "Yes",
+}
+
+export function isNyaaRSS(target: any): target is NyaaRSS {
+    try {
+        return target.rss.channel[0].link[0].includes("nyaa");
+    } catch {
+        return false;
+    }
+}
+
+export function isNyaaRSSItem(item: any): item is NyaaRSSItem {
+    try {
+        return item.link[0].includes("nyaa");
+    } catch {
+        return false;
+    }
 }

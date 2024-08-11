@@ -1,4 +1,3 @@
-export type * from "./resource/rss";
 export type * from "./config";
 export type * from "./context";
 export type * from "./record";

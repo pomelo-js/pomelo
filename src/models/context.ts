@@ -1,4 +1,4 @@
-import { PomeloRecord } from "../record";
+import { PomeloRecord } from "../core/record";
 import { PomeloConfig } from "./config";
 import { PomeloPlugin } from "./plugin";
 import { PomeloRule, PomeloRuleUnit } from "./rule";

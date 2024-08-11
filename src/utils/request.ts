@@ -1,9 +1,10 @@
 import { readFile } from "fs/promises";
-import { PomeloDownloadOption } from "./models/rule";
-import { PomeloConfig } from "./models/config";
+import { PomeloDownloadOption } from "../models/rule";
+import { PomeloConfig } from "../models/config";
 import { resolve } from "path";
 import { get } from "node:http";
 
+// 推送下载请求到aria2
 export async function postDownloadRequest(
     config: PomeloConfig,
     link: string,

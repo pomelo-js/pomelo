@@ -3,11 +3,11 @@ export interface ShareAcgnxRSS {
         $: {
             version: string;
         };
-        channel: ShareAcgnxChannel[];
+        channel: ShareAcgnxRSSChannel[];
     };
 }
 
-interface ShareAcgnxChannel {
+export interface ShareAcgnxRSSChannel {
     title: string[];
     link: string[];
     description: string[];
@@ -15,10 +15,10 @@ interface ShareAcgnxChannel {
     language: string[];
     generator: string[];
     copyright: string[];
-    item: ShareAcgnxItem[];
+    item: ShareAcgnxRSSItem[];
 }
 
-export interface ShareAcgnxItem {
+export interface ShareAcgnxRSSItem {
     title: string[];
     link: string[];
     description: string[];
@@ -78,4 +78,20 @@ interface GUIDElement {
 
 interface GUID {
     isPermaLink: string;
+}
+
+export function isShareAcgnxRSS(target: any): target is ShareAcgnxRSS {
+    try {
+        return target.rss.channel[0].link[0].includes("share.acgnx");
+    } catch (error) {
+        return false;
+    }
+}
+
+export function isShareAcgnxRSSItem(item: any): item is ShareAcgnxRSSItem {
+    try {
+        return item.link[0].includes("share.acgnx");
+    } catch {
+        return false;
+    }
 }

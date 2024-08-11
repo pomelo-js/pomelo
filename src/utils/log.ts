@@ -1,3 +1,5 @@
+import { getFormattedTime } from "./time";
+
 type Color = "RESET" | "RED" | "GREEN" | "YELLOW" | "BLUE";
 
 const COLOR: Record<Color, string> = {
@@ -9,23 +11,6 @@ const COLOR: Record<Color, string> = {
 };
 function getColoredText(content: string, color: Color) {
     return COLOR[color] + content + COLOR.RESET;
-}
-
-function getFormattedTime(showYear: boolean = false) {
-    const tmp = new Date();
-    const year = tmp.getFullYear();
-    const month = tmp.getMonth() + 1;
-    const date = tmp.getDate();
-    const formattedDate = `${year}/${month}/${date}`;
-    const hours = tmp.getHours();
-    const minutes =
-        tmp.getMinutes() < 10 ? `0${tmp.getMinutes()}` : tmp.getMinutes();
-    const seconds =
-        tmp.getSeconds() < 10 ? `0${tmp.getSeconds()}` : tmp.getSeconds();
-    const formattedMoment = `${hours}:${minutes}:${seconds}`;
-    return showYear
-        ? `${formattedDate} ${formattedMoment}`
-        : `${formattedMoment}`;
 }
 
 export function successLog(content: string) {

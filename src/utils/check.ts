@@ -1,4 +1,5 @@
 import { PomeloConfig } from "../models/config";
+
 //checker
 export function checkConfig(config: PomeloConfig) {
     try {

@@ -3,18 +3,17 @@ export interface MikanamiRSS {
         $: {
             version: string;
         };
-        channel: MikanamiChannel[];
+        channel: MikanamiRSSChannel[];
     };
 }
-
-export interface MikanamiChannel {
+export interface MikanamiRSSChannel {
     title: string[];
     link: string[];
     description: string[];
-    item: MikanamiItem[];
+    item: MikanamiRSSItem[];
 }
 
-export interface MikanamiItem {
+export interface MikanamiRSSItem {
     guid: GUIDElement[];
     link: string[];
     title: string[];
@@ -57,3 +56,18 @@ interface Torrent {
     xmlns: string;
 }
 
+export function isMikanamiRSS(target: any): target is MikanamiRSS {
+    try {
+        return target.rss.channel[0].link[0].includes("mikanani");
+    } catch {
+        return false;
+    }
+}
+
+export function isMikanamiRSSItem(item: any): item is MikanamiRSSItem {
+    try {
+        return item.link[0].includes("mikanani");
+    } catch {
+        return false;
+    }
+}
