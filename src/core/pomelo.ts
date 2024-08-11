@@ -1,5 +1,5 @@
 import { resolve } from "path";
-import { getResourceString } from "./api";
+import { getResourceString } from "../utils";
 import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloTaskContext,

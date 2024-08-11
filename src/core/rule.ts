@@ -1,4 +1,4 @@
-import { postDownloadRequest } from "./api";
+import { postDownloadRequest } from "../utils";
 import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloMatchContext,
