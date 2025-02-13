@@ -1,16 +1,16 @@
-import { postDownloadRequest } from "../utils";
+import { postAria2DownloadRequest, carryCustomDownloadCommand } from "../utils";
 import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloMatchContext,
     PomeloRuleContext,
     PomeloRule,
-    RuleHandlerOption,
+    RuleHandlerOptions,
     PomeloHandler,
 } from "../models";
 import { getResourceString as _getResource } from "../utils";
 import { isRegExpOption } from "../utils";
 
-//规则匹配器
+// 规则匹配器
 export function matchRule<T extends { content: string; link: string }>(
     context: PomeloMatchContext & T
 ) {
@@ -34,8 +34,8 @@ export function matchRule<T extends { content: string; link: string }>(
     return false;
 }
 
-//创建匹配器
-function createMatcher(optss: RuleHandlerOption): PomeloHandler | undefined {
+// 创建匹配器
+function createMatcher(optss: RuleHandlerOptions): PomeloHandler | undefined {
     if (typeof optss === "function") {
         return (content: string) => optss(content);
     } else if (typeof optss === "string") {
@@ -72,9 +72,26 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
     } = context;
     return {
         name: ruleUnit.name,
-        option: ruleUnit.option,
+        options: ruleUnit.options,
         accept: createMatcher(ruleUnit.accept),
         reject: createMatcher(ruleUnit.reject),
+        async _download(link: string) {
+            // 选择不同的下载方法
+            if (config.download.aria2 && config.download.aria2.enabled) {
+                console.time("3.post download request to aria2 --" + link);
+                await postAria2DownloadRequest(config, link, this);
+                console.timeEnd("3.post download request to aria2 --" + link);
+            } else if (
+                config.download.custom &&
+                config.download.custom.enabled
+            ) {
+                console.time("3.carry custom download command");
+                await carryCustomDownloadCommand(config, this);
+                console.timeEnd("3.carry custom download command");
+            } else {
+                throw "no downloads matched!!! please check config file";
+            }
+        },
         async onAccepted(title: string, link: string) {
             //判断是否已经下载过了
             if (downloadMap[link]) {
@@ -83,7 +100,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
             //判断是否存在有效记录
             if (record.accepted.isValid("link", link)) {
                 return warnLog(
-                    `checked [record]: ${title} when accepted, post download request will be skipped.`
+                    `checked [record]: ${title} when accepted, download will be skipped.`
                 );
             }
             //执行下载和记录
@@ -95,32 +112,21 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
 
                 //判断是否仅需要记录
                 if (!onlyRecord) {
-                    console.time("3.post download request to aria2 --" + link);
                     downloadMap[link] = true;
-                    await postDownloadRequest(
-                        config,
-                        link,
-                        this.option,
-                        this.name
-                    );
-                    console.timeEnd(
-                        "3.post download request to aria2 --" + link
-                    );
+                    await this._download(link);
                 }
             } catch (error) {
                 //出现错误要重置之前的操作
                 record.accepted.delete("title", title);
                 record.accepted.delete("link", link);
                 downloadMap[link] = false;
-                errorLog(
-                    `post download request failed!\nitem: ${title}\nerror: ${error}`
-                );
+                errorLog(`download failed!\nitem: ${title}\nerror: ${error}`);
             }
         },
         onRejected(title: string, link: string) {
             if (record.rejected.isValid("link", link)) {
                 return warnLog(
-                    `checked [record]: ${title} when rejected, download request will be skipped.`
+                    `checked [record]: ${title} when rejected, download will be skipped.`
                 );
             }
             successLog(`reject ${title} by [rule]: ${ruleUnit.name}`);

@@ -13,11 +13,20 @@ export interface PomeloConfig {
             handler: (content: string, link: string) => void | Promise<void>
         ) => void | Promise<void>; //处理解析后的对象
     };
-    aria2: {
-        env: boolean;
-        host: string;
-        port: string;
-        token: string;
+    download: {
+        // 默认支持 aria2 & json-rpc 下载
+        aria2?: {
+            enabled: boolean;
+            env: boolean;
+            host: string;
+            port: string;
+            token: string;
+        };
+        // 默认支持 自定义bun-shell 下载
+        custom?: {
+            enabled: boolean;
+            command: string;
+        };
     };
     rules: PomeloRuleMap;
 }

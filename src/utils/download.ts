@@ -1,50 +1,48 @@
 import { readFile } from "fs/promises";
-import { PomeloDownloadOption } from "../models/rule";
+import { PomeloRule } from "../models/rule";
 import { PomeloConfig } from "../models/config";
 import { resolve } from "path";
 import { get } from "node:http";
+import { replaceRuleVar } from "./rule";
+import { $ } from "bun";
+import { carryCommand } from "./shell";
 
 // 推送下载请求到aria2
-export async function postDownloadRequest(
+export async function postAria2DownloadRequest(
     config: PomeloConfig,
-    link: string,
-    opts: PomeloDownloadOption,
-    ruleName: string
+    url: string,
+    rule: PomeloRule
 ) {
-    let token =
-        process.env["POMELO_ARIA2_TOKEN"] ||
-        opts.token ||
-        config.aria2.token ||
-        "";
+    const { aria2 } = config.download;
+    let token = process.env["POMELO_ARIA2_TOKEN"] || aria2!.token || "";
+    let host = process.env["POMELO_ARIA2_HOST"] || aria2!.host || "";
+    let port = process.env["POMELO_ARIA2_PORT"] || aria2!.port || "";
 
-    let host =
-        process.env["POMELO_ARIA2_HOST"] ||
-        opts.host ||
-        config.aria2.host ||
-        "";
-    let port =
-        process.env["POMELO_ARIA2_PORT"] ||
-        opts.port ||
-        config.aria2.port ||
-        "";
-
-    const url = `${host}:${port}/jsonrpc`;
-
-    const dir = opts.dir.replaceAll("{{rule.name}}", ruleName);
+    const dir = replaceRuleVar(rule.options.download.dir, rule);
     const data = {
         jsonrpc: "2.0",
         method: "aria2.addUri",
         id: "pomelo-aria2-" + Date.now(),
-        params: [`token:${token}`, [link], { dir }],
+        params: [`token:${token}`, [url], { dir }],
     };
 
-    return fetch(url, {
+    return fetch(`${host}:${port}/jsonrpc`, {
         method: "POST",
         body: JSON.stringify(data),
     });
 }
 
-//获取并且解析资源,返回一个合法的js对象
+// 执行 rclone 命令
+export async function carryCustomDownloadCommand(
+    config: PomeloConfig,
+    rule: PomeloRule
+) {
+    const { custom } = config.download;
+    const command = replaceRuleVar(custom!.command, rule);
+    return await carryCommand(command);
+}
+
+// 获取并且解析资源,返回一个合法的js对象
 export async function getResourceString(
     options: PomeloConfig["resource"]
 ): Promise<string> {
@@ -69,7 +67,9 @@ export async function getResourceString(
                                 chunks.push(chunk);
                             });
                             res.on("end", () => {
-                                resolve(Buffer.concat(chunks).toString());
+                                resolve(
+                                    Buffer.concat(chunks as any).toString()
+                                );
                             });
                         }
                     );

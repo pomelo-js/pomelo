@@ -4,9 +4,10 @@ export type PomeloHandler = (content: string) => boolean;
 export interface PomeloRule {
     name: string;
     resource?: PomeloConfig["resource"];
-    option: PomeloDownloadOption;
+    options: PomeloRuleOptions;
     accept?: PomeloHandler;
     reject?: PomeloHandler;
+    _download: (link: string) => Promise<void> | void;
     onBeforeParse?: () => void;
     onParsed?: () => void;
     onAccepted?: (title: string, link: string) => Promise<void>;
@@ -22,21 +23,23 @@ export interface PomeloRegExp {
     flag: string;
 }
 export interface PomeloRuleUnit {
-    option: PomeloDownloadOption;
-    accept: RuleHandlerOption;
-    reject: RuleHandlerOption;
+    options: PomeloRuleOptions;
+    accept: RuleHandlerOptions;
+    reject: RuleHandlerOptions;
 }
 
-export type RuleHandlerOption =
+export type RuleHandlerOptions =
     | PomeloRegExp[][]
     | string[][]
     | string
     | PomeloRegExp
     | PomeloHandler;
 
-export type PomeloDownloadOption = {
-    dir: string;
-    host?: string;
-    port?: string;
-    token?: string;
-};
+export interface PomeloRuleOptions {
+    download: {
+        /**
+         * 下载目录
+         */
+        dir: string;
+    };
+}

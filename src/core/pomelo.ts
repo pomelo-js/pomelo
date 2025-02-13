@@ -29,8 +29,7 @@ async function _init({
     onlyRecord: boolean;
 }) {
     try {
-        //解析路径,record路径默认与config路径一致
-        //#region
+        //#region 解析路径, record 路径默认与 config 路径一致
         const configPath =
             typeof configMap === "string" ? resolve(configMap) : resolve(".");
 
@@ -38,8 +37,7 @@ async function _init({
             typeof recordMap === "string" ? resolve(recordMap) : configPath;
         //#endregion
 
-        //加载配置和记录
-        //#region
+        //#region 加载配置和记录
         const config =
             typeof configMap === "string"
                 ? checkConfig(await loadConfig(configPath))
@@ -62,8 +60,7 @@ async function _init({
         //第一次执行时更新一次__record,删除过期的记录
         record.clean();
 
-        //解析定时任务
-        //#region
+        //#region 解析定时任务
         const interval = parseToMillisecond(config.interval || 0);
         const intervalTimeCount = (id: number) => {
             console.time("interval task--" + id);
@@ -71,8 +68,7 @@ async function _init({
         };
         //#endregion
 
-        //封装对象上下文
-        //#region
+        //#region 封装对象上下文
         const context: PomeloTaskContext = {
             config,
             record,
@@ -83,8 +79,7 @@ async function _init({
         };
         //#endregion
 
-        //绑定process回调
-        //#region
+        //#region 绑定 process 回调
         //中断信号处理
         const interuptHandler = () => {
             warnLog(
@@ -105,8 +100,7 @@ async function _init({
         });
         //#endregion
 
-        //任务调度
-        //#region
+        //#region 任务调度
         if (interval) {
             return {
                 task: async () => {
