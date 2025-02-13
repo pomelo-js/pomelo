@@ -6,7 +6,7 @@ import { $ } from "bun";
  */
 export async function carryCommand(text: string) {
     const trunks = text.split(" ");
-    const command = trunks[0];
-    const args = trunks[1];
+    const command = trunks.shift();
+    const args = trunks.join(" ");
     await $`${command} ${args}`;
 }
