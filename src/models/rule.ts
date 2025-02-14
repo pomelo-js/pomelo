@@ -7,11 +7,16 @@ export interface PomeloRule {
     options: PomeloRuleOptions;
     accept?: PomeloHandler;
     reject?: PomeloHandler;
-    _download: (link: string) => Promise<void> | void;
+    _download: (item: PomeloRuleMatchedItem) => Promise<void> | void;
     onBeforeParse?: () => void;
     onParsed?: () => void;
     onAccepted?: (title: string, link: string) => Promise<void>;
     onRejected?: (title: string, link: string) => void;
+}
+
+export interface PomeloRuleMatchedItem {
+    link: string;
+    title: string;
 }
 
 export type PomeloRuleMap = {

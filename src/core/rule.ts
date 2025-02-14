@@ -6,6 +6,7 @@ import type {
     PomeloRule,
     RuleHandlerOptions,
     PomeloHandler,
+    PomeloRuleMatchedItem,
 } from "../models";
 import { getResourceString as _getResource } from "../utils";
 import { isRegExpOption } from "../utils";
@@ -75,18 +76,20 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
         options: ruleUnit.options,
         accept: createMatcher(ruleUnit.accept),
         reject: createMatcher(ruleUnit.reject),
-        async _download(link: string) {
+        async _download(item: PomeloRuleMatchedItem) {
             // 选择不同的下载方法
             if (config.download.aria2 && config.download.aria2.enabled) {
-                console.time("3.post download request to aria2 --" + link);
-                await postAria2DownloadRequest(config, link, this);
-                console.timeEnd("3.post download request to aria2 --" + link);
+                console.time("3.post download request to aria2 --" + item.link);
+                await postAria2DownloadRequest(config, this, item);
+                console.timeEnd(
+                    "3.post download request to aria2 --" + item.link
+                );
             } else if (
                 config.download.custom &&
                 config.download.custom.enabled
             ) {
                 console.time("3.carry custom download command");
-                await carryCustomDownloadCommand(config, this);
+                await carryCustomDownloadCommand(config, this, item);
                 console.timeEnd("3.carry custom download command");
             } else {
                 throw "no downloads matched!!! please check config file";
@@ -113,7 +116,10 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 //判断是否仅需要记录
                 if (!onlyRecord) {
                     downloadMap[link] = true;
-                    await this._download(link);
+                    await this._download({
+                        title,
+                        link,
+                    });
                 }
             } catch (error) {
                 //出现错误要重置之前的操作

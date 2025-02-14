@@ -1,29 +1,28 @@
 import { readFile } from "fs/promises";
-import { PomeloRule } from "../models/rule";
+import { PomeloRule, PomeloRuleMatchedItem } from "../models/rule";
 import { PomeloConfig } from "../models/config";
 import { resolve } from "path";
 import { get } from "node:http";
 import { replaceRuleVar } from "./rule";
-import { $ } from "bun";
 import { carryCommand } from "./shell";
 
 // 推送下载请求到aria2
 export async function postAria2DownloadRequest(
     config: PomeloConfig,
-    url: string,
-    rule: PomeloRule
+    rule: PomeloRule,
+    item: PomeloRuleMatchedItem
 ) {
     const { aria2 } = config.download;
     let token = process.env["POMELO_ARIA2_TOKEN"] || aria2!.token || "";
     let host = process.env["POMELO_ARIA2_HOST"] || aria2!.host || "";
     let port = process.env["POMELO_ARIA2_PORT"] || aria2!.port || "";
 
-    const dir = replaceRuleVar(rule.options.download.dir, rule);
+    const dir = replaceRuleVar(rule.options.download.dir, rule, item);
     const data = {
         jsonrpc: "2.0",
         method: "aria2.addUri",
         id: "pomelo-aria2-" + Date.now(),
-        params: [`token:${token}`, [url], { dir }],
+        params: [`token:${token}`, [item.link], { dir }],
     };
 
     return fetch(`${host}:${port}/jsonrpc`, {
@@ -35,10 +34,11 @@ export async function postAria2DownloadRequest(
 // 执行 rclone 命令
 export async function carryCustomDownloadCommand(
     config: PomeloConfig,
-    rule: PomeloRule
+    rule: PomeloRule,
+    item: PomeloRuleMatchedItem
 ) {
     const { custom } = config.download;
-    const command = replaceRuleVar(custom!.command, rule);
+    const command = replaceRuleVar(custom!.command, rule, item);
     return await carryCommand(command);
 }
 
