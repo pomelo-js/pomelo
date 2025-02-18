@@ -1,4 +1,4 @@
-import { postAria2DownloadRequest, carryCustomDownloadCommand } from "../utils";
+import { postAria2DownloadRequest, carryCommand } from "../utils";
 import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloMatchContext,
@@ -76,6 +76,25 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
         options: ruleUnit.options,
         accept: createMatcher(ruleUnit.accept),
         reject: createMatcher(ruleUnit.reject),
+        async _carryCommand(item: PomeloRuleMatchedItem) {
+            if (this.options.download.command) {
+                const command = this._replaceVar(
+                    this.options.download.command,
+                    item
+                );
+                return await carryCommand(command);
+            }
+        },
+        _replaceVar(content: string, item: PomeloRuleMatchedItem) {
+            return content
+                .replaceAll("{{rule.name}}", this.name)
+                .replaceAll("{{item.link}}", item.link)
+                .replaceAll("{{item.title}}", item.title)
+                .replaceAll(
+                    "{{rule.options.download.dir}}",
+                    this.options.download.dir
+                );
+        },
         async _download(item: PomeloRuleMatchedItem) {
             // 选择不同的下载方法
             if (config.download.aria2 && config.download.aria2.enabled) {
@@ -89,7 +108,11 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 config.download.custom.enabled
             ) {
                 console.time("3.carry custom download command");
-                await carryCustomDownloadCommand(config, this, item);
+                const command = this._replaceVar(
+                    config.download.custom.command,
+                    item
+                );
+                await carryCommand(command);
                 console.timeEnd("3.carry custom download command");
             } else {
                 throw "no downloads matched!!! please check config file";
@@ -116,10 +139,9 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 //判断是否仅需要记录
                 if (!onlyRecord) {
                     downloadMap[link] = true;
-                    await this._download({
-                        title,
-                        link,
-                    });
+                    const item = { title, link };
+                    await this._carryCommand(item);
+                    await this._download(item);
                 }
             } catch (error) {
                 //出现错误要重置之前的操作

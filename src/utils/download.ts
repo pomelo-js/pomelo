@@ -3,8 +3,6 @@ import { PomeloRule, PomeloRuleMatchedItem } from "../models/rule";
 import { PomeloConfig } from "../models/config";
 import { resolve } from "path";
 import { get } from "node:http";
-import { replaceRuleVar } from "./rule";
-import { carryCommand } from "./shell";
 
 // 推送下载请求到aria2
 export async function postAria2DownloadRequest(
@@ -17,7 +15,7 @@ export async function postAria2DownloadRequest(
     let host = process.env["POMELO_ARIA2_HOST"] || aria2!.host || "";
     let port = process.env["POMELO_ARIA2_PORT"] || aria2!.port || "";
 
-    const dir = replaceRuleVar(rule.options.download.dir, rule, item);
+    const dir = rule._replaceVar(rule.options.download.dir, item);
     const data = {
         jsonrpc: "2.0",
         method: "aria2.addUri",
@@ -29,17 +27,6 @@ export async function postAria2DownloadRequest(
         method: "POST",
         body: JSON.stringify(data),
     });
-}
-
-// 执行 rclone 命令
-export async function carryCustomDownloadCommand(
-    config: PomeloConfig,
-    rule: PomeloRule,
-    item: PomeloRuleMatchedItem
-) {
-    const { custom } = config.download;
-    const command = replaceRuleVar(custom!.command, rule, item);
-    return await carryCommand(command);
 }
 
 // 获取并且解析资源,返回一个合法的js对象

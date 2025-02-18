@@ -8,6 +8,8 @@ export interface PomeloRule {
     accept?: PomeloHandler;
     reject?: PomeloHandler;
     _download: (item: PomeloRuleMatchedItem) => Promise<void> | void;
+    _replaceVar: (content: string, item: PomeloRuleMatchedItem) => string;
+    _carryCommand: (item: PomeloRuleMatchedItem) => Promise<void> | void;
     onBeforeParse?: () => void;
     onParsed?: () => void;
     onAccepted?: (title: string, link: string) => Promise<void>;
@@ -46,5 +48,9 @@ export interface PomeloRuleOptions {
          * 下载目录
          */
         dir: string;
+        /**
+         * 要执行的命令
+         */
+        command?: string;
     };
 }
