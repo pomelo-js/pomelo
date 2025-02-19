@@ -77,7 +77,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
         accept: createMatcher(ruleUnit.accept),
         reject: createMatcher(ruleUnit.reject),
         async _carryCommand(item: PomeloRuleMatchedItem) {
-            if (this.options.download.command) {
+            if (this.options.download.command?.length) {
                 const command = this._replaceVar(
                     this.options.download.command,
                     item
@@ -85,15 +85,28 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 return await carryCommand(command);
             }
         },
-        _replaceVar(content: string, item: PomeloRuleMatchedItem) {
-            return content
-                .replaceAll("{{rule.name}}", this.name)
-                .replaceAll("{{item.link}}", item.link)
-                .replaceAll("{{item.title}}", item.title)
-                .replaceAll(
-                    "{{rule.options.download.dir}}",
-                    this.options.download.dir
+        _replaceVar(content: string | string[], item: PomeloRuleMatchedItem) {
+            if (Array.isArray(content)) {
+                return content.map((str) =>
+                    (str + "")
+                        .replaceAll("{{rule.name}}", this.name)
+                        .replaceAll("{{item.link}}", item.link)
+                        .replaceAll("{{item.title}}", item.title)
+                        .replaceAll(
+                            "{{rule.options.download.dir}}",
+                            this.options.download.dir
+                        )
                 );
+            } else {
+                return content
+                    .replaceAll("{{rule.name}}", this.name)
+                    .replaceAll("{{item.link}}", item.link)
+                    .replaceAll("{{item.title}}", item.title)
+                    .replaceAll(
+                        "{{rule.options.download.dir}}",
+                        this.options.download.dir
+                    );
+            }
         },
         async _download(item: PomeloRuleMatchedItem) {
             // 选择不同的下载方法
@@ -105,7 +118,8 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 );
             } else if (
                 config.download.custom &&
-                config.download.custom.enabled
+                config.download.custom.enabled &&
+                config.download.custom.command?.length
             ) {
                 console.time("3.carry custom download command");
                 const command = this._replaceVar(

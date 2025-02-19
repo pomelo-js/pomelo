@@ -25,7 +25,7 @@ export interface PomeloConfig {
         // 默认支持 自定义bun-shell 下载
         custom?: {
             enabled: boolean;
-            command: string;
+            command?: string[] | string;
         };
     };
     rules: PomeloRuleMap;
