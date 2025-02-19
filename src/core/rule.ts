@@ -124,7 +124,10 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 return warnLog(title + " has been downloaded but accepted");
             }
             //判断是否存在有效记录
-            if (record.accepted.isValid("link", link)) {
+            if (
+                record.accepted.isValid("link", link) ||
+                record.accepted.isValid("title", title)
+            ) {
                 return warnLog(
                     `checked [record]: ${title} when accepted, download will be skipped.`
                 );
@@ -145,7 +148,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                     await this._download(item);
                 }
             } catch (error) {
-                //出现错误要重置之前的操作
+                // 出现错误要重置之前的操作
                 record.accepted.delete("title", title);
                 record.accepted.delete("link", link);
                 downloadMap.link[link] = false;
@@ -154,7 +157,10 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
             }
         },
         onRejected(title: string, link: string) {
-            if (record.rejected.isValid("link", link)) {
+            if (
+                record.rejected.isValid("link", link) ||
+                record.rejected.isValid("title", title)
+            ) {
                 return warnLog(
                     `checked [record]: ${title} when rejected, download will be skipped.`
                 );
