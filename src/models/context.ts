@@ -21,6 +21,9 @@ export type PomeloCommonContext = {
     record: PomeloRecord;
     onlyRecord: boolean;
     intervalTimeCount?: () => void;
-    downloadMap: Record<string, boolean>; //映射下载情况
+    downloadMap: {
+        link: Record<string, boolean>;
+        title: Record<string, boolean>;
+    }; //映射下载情况
     plugins: PomeloPlugin[];
 };

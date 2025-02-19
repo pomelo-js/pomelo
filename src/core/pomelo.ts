@@ -74,7 +74,10 @@ async function _init({
             record,
             plugins: [],
             intervalTimeCount: void 0,
-            downloadMap: {},
+            downloadMap: {
+                link: {},
+                title: {},
+            },
             onlyRecord,
         };
         //#endregion

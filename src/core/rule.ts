@@ -120,7 +120,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
         },
         async onAccepted(title: string, link: string) {
             //判断是否已经下载过了
-            if (downloadMap[link]) {
+            if (downloadMap.link[link] || downloadMap.title[title]) {
                 return warnLog(title + " has been downloaded but accepted");
             }
             //判断是否存在有效记录
@@ -138,7 +138,8 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
 
                 //判断是否仅需要记录
                 if (!onlyRecord) {
-                    downloadMap[link] = true;
+                    downloadMap.link[link] = true;
+                    downloadMap.title[title] = true;
                     const item = { title, link };
                     await this._carryCommand(item);
                     await this._download(item);
@@ -147,7 +148,8 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 //出现错误要重置之前的操作
                 record.accepted.delete("title", title);
                 record.accepted.delete("link", link);
-                downloadMap[link] = false;
+                downloadMap.link[link] = false;
+                downloadMap.title[title] = false;
                 errorLog(`download failed!\nitem: ${title}\nerror: ${error}`);
             }
         },
