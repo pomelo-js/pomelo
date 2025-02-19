@@ -27,7 +27,8 @@
   "dependencies": {
     "js-yaml": "^4.1.0",
     "minimist": "^1.2.8",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "execa": "^9.5.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -36,5 +37,10 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

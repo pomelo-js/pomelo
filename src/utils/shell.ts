@@ -1,12 +1,10 @@
-import { $ } from "bun";
+import { $ } from "execa";
 
 /**
- * 利用 bun shell 执行命令
- * @param text 整句命令
+ * 执行shell命令
+ * @param command 整句命令
  */
-export async function carryCommand(text: string) {
-    const trunks = text.split(" ");
-    const command = trunks.shift();
-    const args = trunks.join(" ");
-    await $`${command} ${args}`;
+export async function carryCommand(command: string) {
+    const { stdout } = await $`${command}`;
+    console.log(stdout);
 }
