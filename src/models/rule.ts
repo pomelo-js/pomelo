@@ -12,6 +12,7 @@ export interface PomeloRule {
         content: string | string[],
         item: PomeloRuleMatchedItem
     ) => string | string[];
+    _replaceBase: (content: string, item: PomeloRuleMatchedItem) => string;
     _carryCommand: (
         command: string | string[],
         item: PomeloRuleMatchedItem

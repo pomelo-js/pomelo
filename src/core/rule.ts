@@ -83,29 +83,35 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
             const _command = this._replaceVar(command, item);
             return await carryCommand(_command);
         },
+        _replaceBase(content: string, item: PomeloRuleMatchedItem) {
+            content = content + "";
+            if (config.replace) {
+                Object.entries(config.replace).forEach(([key, value]) => {
+                    content = content.replaceAll(key, value);
+                });
+            }
+            if (this.options.replace) {
+                Object.entries(this.options.replace).forEach(([key, value]) => {
+                    content = content.replaceAll(key, value);
+                });
+            }
+
+            return content
+                .replaceAll("{{rule.name}}", this.name)
+                .replaceAll("{{item.link}}", item.link)
+                .replaceAll("{{item.title}}", item.title)
+                .replaceAll(
+                    "{{rule.options.download.dir}}",
+                    this.options.download?.dir || ""
+                );
+        },
         _replaceVar(content: string | string[], item: PomeloRuleMatchedItem) {
             if (!content) return "";
 
             if (Array.isArray(content)) {
-                return content.map((str) =>
-                    (str + "")
-                        .replaceAll("{{rule.name}}", this.name)
-                        .replaceAll("{{item.link}}", item.link)
-                        .replaceAll("{{item.title}}", item.title)
-                        .replaceAll(
-                            "{{rule.options.download.dir}}",
-                            this.options.download?.dir || ""
-                        )
-                );
+                return content.map((str) => this._replaceBase(str, item));
             } else {
-                return content
-                    .replaceAll("{{rule.name}}", this.name)
-                    .replaceAll("{{item.link}}", item.link)
-                    .replaceAll("{{item.title}}", item.title)
-                    .replaceAll(
-                        "{{rule.options.download.dir}}",
-                        this.options.download?.dir || ""
-                    );
+                return this._replaceBase(content, item);
             }
         },
         async _download(item: PomeloRuleMatchedItem) {
