@@ -84,7 +84,15 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
             return await carryCommand(_command);
         },
         _replaceBase(content: string, item: PomeloRuleMatchedItem) {
-            content = content + "";
+            content = (content + "")
+                .replaceAll("{{rule.name}}", this.name)
+                .replaceAll("{{item.link}}", item.link)
+                .replaceAll("{{item.title}}", item.title)
+                .replaceAll(
+                    "{{rule.options.download.dir}}",
+                    this.options.download?.dir || ""
+                );
+
             if (config.replace) {
                 Object.entries(config.replace).forEach(([key, value]) => {
                     content = content.replaceAll(key, value);
@@ -96,14 +104,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 });
             }
 
-            return content
-                .replaceAll("{{rule.name}}", this.name)
-                .replaceAll("{{item.link}}", item.link)
-                .replaceAll("{{item.title}}", item.title)
-                .replaceAll(
-                    "{{rule.options.download.dir}}",
-                    this.options.download?.dir || ""
-                );
+            return content;
         },
         _replaceVar(content: string | string[], item: PomeloRuleMatchedItem) {
             if (!content) return "";
