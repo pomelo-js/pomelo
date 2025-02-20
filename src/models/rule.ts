@@ -21,7 +21,10 @@ export interface PomeloRule {
     onParsed?: () => void;
     onAccepted?: (title: string, link: string) => Promise<void>;
     onRejected?: (title: string, link: string) => void;
-    onAcceptedHook: (item: PomeloRuleMatchedItem) => boolean | Promise<boolean>;
+    onAcceptedAction: (
+        item: PomeloRuleMatchedItem
+    ) => boolean | Promise<boolean>;
+    onRejectedAction: (item: PomeloRuleMatchedItem) => void | Promise<void>;
 }
 
 export interface PomeloRuleMatchedItem {
@@ -52,7 +55,7 @@ export type RuleHandlerOptions =
 
 export interface PomeloRuleOptions {
     replace?: Record<string, string>;
-    hooks?: PomeloConfig["hooks"];
+    actions?: PomeloConfig["actions"];
     download?: {
         /**
          * 下载目录

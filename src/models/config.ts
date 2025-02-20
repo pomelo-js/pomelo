@@ -25,9 +25,12 @@ export interface PomeloConfig {
             token: string;
         };
     };
-    hooks?: {
+    actions?: {
         accept?: {
             download: boolean;
+            command?: string[] | string;
+        };
+        reject?: {
             command?: string[] | string;
         };
     };

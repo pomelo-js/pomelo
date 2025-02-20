@@ -124,9 +124,9 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 );
             }
         },
-        async onAcceptedHook(item: PomeloRuleMatchedItem) {
+        async onAcceptedAction(item: PomeloRuleMatchedItem) {
             // 触发规则 Hook
-            const ruleAcceptHook = this.options.hooks?.accept;
+            const ruleAcceptHook = this.options.actions?.accept;
             if (ruleAcceptHook && ruleAcceptHook.command) {
                 await this._carryCommand(ruleAcceptHook.command, item);
                 return ruleAcceptHook.download === void 0
@@ -135,7 +135,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
             }
 
             // 触发全局 Hook
-            const globalAcceptHook = config.hooks?.accept;
+            const globalAcceptHook = config.actions?.accept;
             if (globalAcceptHook && globalAcceptHook.command) {
                 await this._carryCommand(globalAcceptHook.command, item);
                 return globalAcceptHook.download === void 0
@@ -144,6 +144,19 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
             }
 
             return true;
+        },
+        async onRejectedAction(item: PomeloRuleMatchedItem) {
+            // 触发规则 Hook
+            const ruleRejectHook = this.options.actions?.reject;
+            if (ruleRejectHook && ruleRejectHook.command) {
+                await this._carryCommand(ruleRejectHook.command, item);
+            }
+
+            // 触发全局 Hook
+            const globalRejectHook = config.actions?.reject;
+            if (globalRejectHook && globalRejectHook.command) {
+                await this._carryCommand(globalRejectHook.command, item);
+            }
         },
         async onAccepted(title: string, link: string) {
             //判断是否已经下载过了
@@ -167,7 +180,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 record.accepted.add("link", link);
 
                 const item = { title, link };
-                const isDownload = await this.onAcceptedHook(item);
+                const isDownload = await this.onAcceptedAction(item);
                 //判断是否仅需要记录
                 if (onlyRecord) {
                     return;
@@ -189,7 +202,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 errorLog(`download failed!\nitem: ${title}\nerror: ${error}`);
             }
         },
-        onRejected(title: string, link: string) {
+        async onRejected(title: string, link: string) {
             if (
                 record.rejected.isValid("link", link) ||
                 record.rejected.isValid("title", title)
@@ -198,6 +211,10 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                     `checked [record]: ${title} when rejected, download will be skipped.`
                 );
             }
+            await this.onRejectedAction({
+                title,
+                link,
+            });
             successLog(`reject ${title} by [rule]: ${ruleUnit.name}`);
             record.rejected.add("title", title);
             record.rejected.add("link", link);
