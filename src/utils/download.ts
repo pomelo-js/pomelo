@@ -32,12 +32,11 @@ export async function postAria2DownloadRequest(
     });
 }
 
-// 获取并且解析资源,返回一个合法的js对象
-export async function getResourceString(
-    options: PomeloConfig["resource"]
-): Promise<string> {
+// 获取资源
+export async function getResourceString(url: string): Promise<string> {
     try {
-        if (options.url.includes("http") || options.url.includes("https")) {
+        // 网络下载
+        if (url.includes("http") || url.includes("https")) {
             const [host, port] = (
                 process.env["HTTP_PROXY"] ||
                 process.env["HTTPS_PROXY"] ||
@@ -47,7 +46,7 @@ export async function getResourceString(
                 return new Promise((resolve) => {
                     get(
                         {
-                            path: options.url,
+                            path: url,
                             host,
                             port,
                         },
@@ -65,12 +64,12 @@ export async function getResourceString(
                     );
                 });
             } else {
-                const res = await fetch(options.url);
+                const res = await fetch(url);
                 return await res.text();
             }
         } else {
             //本地加载
-            const buf = await readFile(resolve(options.url));
+            const buf = await readFile(resolve(url));
             return buf.toString();
         }
     } catch (error) {

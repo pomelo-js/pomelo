@@ -6,7 +6,7 @@ export interface PomeloConfig {
         expire: number | string;
     };
     resource: {
-        url: string;
+        url: string | string[];
         parser?: (str: string) => object | Promise<object> | undefined | null; //将字符串解析成合法js对象
         worker?: (
             resource: object,

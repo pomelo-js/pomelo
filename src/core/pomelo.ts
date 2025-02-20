@@ -142,14 +142,13 @@ async function _init({
     }
 }
 
-// 任务上下文
-async function _task(context: PomeloTaskContext) {
+// 一轮运行
+async function _round(context: PomeloTaskContext, url: string) {
     const { config, plugins } = context;
-
     //获取resource并且记录耗时
-    successLog("get resource from " + config.resource.url);
+    successLog("get resource from " + url);
     console.time("get resource");
-    const resource = await getResourceString(config.resource);
+    const resource = await getResourceString(url);
     console.timeEnd("get resource");
 
     //处理resource
@@ -195,6 +194,18 @@ async function _task(context: PomeloTaskContext) {
         });
     } else {
         throw "please support right parser and worker!";
+    }
+}
+
+// 任务
+async function _task(context: PomeloTaskContext) {
+    const { config } = context;
+    if (Array.isArray(config.resource.url)) {
+        for (const url of config.resource.url) {
+            await _round(context, url);
+        }
+    } else {
+        await _round(context, config.resource.url);
     }
 }
 
