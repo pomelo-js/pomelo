@@ -76,16 +76,16 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
         options: ruleUnit.options,
         accept: createMatcher(ruleUnit.accept),
         reject: createMatcher(ruleUnit.reject),
-        async _carryCommand(item: PomeloRuleMatchedItem) {
-            if (this.options.download.command?.length) {
-                const command = this._replaceVar(
-                    this.options.download.command,
-                    item
-                );
-                return await carryCommand(command);
-            }
+        async _carryCommand(
+            command: string | string[],
+            item: PomeloRuleMatchedItem
+        ) {
+            const _command = this._replaceVar(command, item);
+            return await carryCommand(_command);
         },
         _replaceVar(content: string | string[], item: PomeloRuleMatchedItem) {
+            if (!content) return "";
+
             if (Array.isArray(content)) {
                 return content.map((str) =>
                     (str + "")
@@ -94,7 +94,7 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                         .replaceAll("{{item.title}}", item.title)
                         .replaceAll(
                             "{{rule.options.download.dir}}",
-                            this.options.download.dir
+                            this.options.download?.dir || ""
                         )
                 );
             } else {
@@ -104,33 +104,40 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                     .replaceAll("{{item.title}}", item.title)
                     .replaceAll(
                         "{{rule.options.download.dir}}",
-                        this.options.download.dir
+                        this.options.download?.dir || ""
                     );
             }
         },
         async _download(item: PomeloRuleMatchedItem) {
             // 选择不同的下载方法
-            if (config.download.aria2 && config.download.aria2.enabled) {
+            if (config.download?.aria2 && config.download.aria2.enabled) {
                 console.time("3.post download request to aria2 --" + item.link);
                 await postAria2DownloadRequest(config, this, item);
                 console.timeEnd(
                     "3.post download request to aria2 --" + item.link
                 );
-            } else if (
-                config.download.custom &&
-                config.download.custom.enabled &&
-                config.download.custom.command?.length
-            ) {
-                console.time("3.carry custom download command");
-                const command = this._replaceVar(
-                    config.download.custom.command,
-                    item
-                );
-                await carryCommand(command);
-                console.timeEnd("3.carry custom download command");
-            } else {
-                throw "no downloads matched!!! please check config file";
             }
+        },
+        async onAcceptedHook(item: PomeloRuleMatchedItem) {
+            // 触发规则 Hook
+            const ruleAcceptHook = this.options.hooks?.accept;
+            if (ruleAcceptHook && ruleAcceptHook.command) {
+                await this._carryCommand(ruleAcceptHook.command, item);
+                return ruleAcceptHook.download === void 0
+                    ? true
+                    : ruleAcceptHook.download;
+            }
+
+            // 触发全局 Hook
+            const globalAcceptHook = config.hooks?.accept;
+            if (globalAcceptHook && globalAcceptHook.command) {
+                await this._carryCommand(globalAcceptHook.command, item);
+                return globalAcceptHook.download === void 0
+                    ? true
+                    : globalAcceptHook.download;
+            }
+
+            return true;
         },
         async onAccepted(title: string, link: string) {
             //判断是否已经下载过了
@@ -153,12 +160,18 @@ export function createRule(context: PomeloRuleContext): PomeloRule {
                 record.accepted.add("title", title);
                 record.accepted.add("link", link);
 
+                const item = { title, link };
+                const isDownload = await this.onAcceptedHook(item);
                 //判断是否仅需要记录
-                if (!onlyRecord) {
-                    downloadMap.link[link] = true;
-                    downloadMap.title[title] = true;
-                    const item = { title, link };
-                    await this._carryCommand(item);
+                if (onlyRecord) {
+                    return;
+                }
+
+                downloadMap.link[link] = true;
+                downloadMap.title[title] = true;
+
+                // 触发 accepted hook
+                if (isDownload) {
                     await this._download(item);
                 }
             } catch (error) {

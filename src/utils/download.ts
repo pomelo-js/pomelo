@@ -10,12 +10,15 @@ export async function postAria2DownloadRequest(
     rule: PomeloRule,
     item: PomeloRuleMatchedItem
 ) {
-    const { aria2 } = config.download;
+    const { aria2 } = config.download!;
     let token = process.env["POMELO_ARIA2_TOKEN"] || aria2!.token || "";
     let host = process.env["POMELO_ARIA2_HOST"] || aria2!.host || "";
     let port = process.env["POMELO_ARIA2_PORT"] || aria2!.port || "";
 
-    const dir = rule._replaceVar(rule.options.download.dir, item);
+    const dir = rule._replaceVar(
+        rule.options.download?.dir || config.download!.dir!,
+        item
+    );
     const data = {
         jsonrpc: "2.0",
         method: "aria2.addUri",

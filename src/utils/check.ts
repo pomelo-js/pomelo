@@ -46,33 +46,29 @@ export function checkConfig(config: PomeloConfig) {
          * 2. rclone & pikpak
          * 3. custom
          **/
-        if (download) {
-            let allow = false;
-            // 检查 aria2 下载配置
-            if (download.aria2 && download.aria2.enabled) {
-                if (typeof download.aria2.env !== "boolean") {
-                    throw "download.aria2.env must be boolean";
-                }
-                if (download.aria2.host && checkHost(download.aria2.port)) {
-                    throw "download.aria2.host must be https or http protocols";
-                }
-                if (download.aria2.port && checkPort(download.aria2.port)) {
-                    throw "invalid download.aria2.port";
-                }
-                if (download.aria2.token) {
-                }
-                allow = true;
-            }
+        // if (download) {
+        //     let allow = false;
+        //     // 检查 aria2 下载配置
+        //     if (download.aria2 && download.aria2.enabled) {
+        //         if (typeof download.aria2.env !== "boolean") {
+        //             throw "download.aria2.env must be boolean";
+        //         }
+        //         if (download.aria2.host && checkHost(download.aria2.port)) {
+        //             throw "download.aria2.host must be https or http protocols";
+        //         }
+        //         if (download.aria2.port && checkPort(download.aria2.port)) {
+        //             throw "invalid download.aria2.port";
+        //         }
+        //         if (!download.dir) {
+        //             throw "invalid download.dir is empty";
+        //         }
+        //         allow = true;
+        //     }
 
-            // 检查自定义下载配置
-            if (download.custom && download.custom.enabled) {
-                allow = true;
-            }
-
-            if (!allow) {
-                throw "no configuration download";
-            }
-        }
+        //     if (!allow) {
+        //         throw "no configuration download";
+        //     }
+        // }
         return config;
     } catch (error) {
         throw "error in checkConfig: " + error;

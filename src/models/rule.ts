@@ -12,11 +12,15 @@ export interface PomeloRule {
         content: string | string[],
         item: PomeloRuleMatchedItem
     ) => string | string[];
-    _carryCommand: (item: PomeloRuleMatchedItem) => Promise<void> | void;
+    _carryCommand: (
+        command: string | string[],
+        item: PomeloRuleMatchedItem
+    ) => Promise<void> | void;
     onBeforeParse?: () => void;
     onParsed?: () => void;
     onAccepted?: (title: string, link: string) => Promise<void>;
     onRejected?: (title: string, link: string) => void;
+    onAcceptedHook: (item: PomeloRuleMatchedItem) => boolean | Promise<boolean>;
 }
 
 export interface PomeloRuleMatchedItem {
@@ -46,14 +50,12 @@ export type RuleHandlerOptions =
     | PomeloHandler;
 
 export interface PomeloRuleOptions {
-    download: {
+    replace?: Record<string, string>;
+    hooks?: PomeloConfig["hooks"];
+    download?: {
         /**
          * 下载目录
          */
-        dir: string;
-        /**
-         * 要执行的命令
-         */
-        command?: string[] | string;
+        dir?: string;
     };
 }
