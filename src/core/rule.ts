@@ -191,6 +191,8 @@ export class PomeloRule {
             downloadMap.link[item.link] = true;
             downloadMap.title[item.title] = true;
 
+            await this.onAcceptedAction(item);
+
             plugins.forEach((p) => p.onAccepted?.(pluginContext, item));
         } catch (error) {
             // 出现错误要重置之前的操作
