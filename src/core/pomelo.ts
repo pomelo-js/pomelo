@@ -41,25 +41,23 @@ export class PomeloEngine {
         this.record = record || new PomeloRecord(this.config);
         this._initBase();
     }
-    public async initFromFile(
-        configPath?: string,
-        recordPath: string = resolve(".")
-    ) {
+    public async initFromFile(configPath?: string, recordPath?: string) {
         if (this._isInited) {
             return warnLog("The pomelo engine has been initialized.");
         }
 
         // 格式化路径
         const _configPath = resolve(configPath || ".");
+        const _recordPath = resolve(recordPath || _configPath);
 
         // 读取配置文件和记录文件
         this.config = checkConfig(await loadConfig(_configPath));
         this.record = new PomeloRecord(this.config, _configPath);
-        if (this.config.record && recordPath) {
+        if (this.config.record && _recordPath) {
             this.record = new PomeloRecord(
                 this.config,
-                recordPath,
-                await loadRecord(recordPath)
+                _recordPath,
+                await loadRecord(_recordPath)
             );
         }
         this._initBase();

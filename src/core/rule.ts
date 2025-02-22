@@ -7,7 +7,6 @@ import type {
     PomeloRuleOptions,
     PomeloRuleUnit,
     PomeloRunContext,
-    PomeloPluginContext,
 } from "../models";
 import { getResourceString as _getResource } from "../utils";
 import { isRegExpOption } from "../utils";
