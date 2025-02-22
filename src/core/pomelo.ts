@@ -41,7 +41,10 @@ export class PomeloEngine {
         this.record = record || new PomeloRecord(this.config);
         this._initBase();
     }
-    public async initFromFile(configPath?: string, recordPath?: string) {
+    public async initFromFile(
+        configPath?: string,
+        recordPath: string = resolve(".")
+    ) {
         if (this._isInited) {
             return warnLog("The pomelo engine has been initialized.");
         }

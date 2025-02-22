@@ -182,8 +182,8 @@ export class PomeloRule {
         }
         //判断是否存在有效记录
         if (
-            this.engine.record!.accepted.isValid("link", link) ||
-            this.engine.record!.accepted.isValid("title", title)
+            this._record.accepted.isValid("link", link) ||
+            this._record.accepted.isValid("title", title)
         ) {
             return warnLog(
                 `checked [record]: ${title} when accepted, download will be skipped.`
