@@ -173,6 +173,8 @@ export class PomeloEngine {
             throw "please support right parser and worker!";
         }
 
+        plugins.forEach((p) => p.onBeforeParse?.(context));
+
         // parse要放外面,避免重复
         const parsed = await parser(resource);
         if (!parsed) throw "the parser dont return valid analytic product";
@@ -187,7 +189,6 @@ export class PomeloEngine {
                 unit,
             });
 
-            plugins.forEach((p) => p.onBeforeParse?.(context));
             rule.onBeforeParse?.(context);
 
             worker?.(parsed, (title, link) => {

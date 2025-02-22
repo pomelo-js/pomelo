@@ -4,6 +4,9 @@ import { isMikanamiRSSItem } from "./mikanani";
 import { isNyaaRSSItem } from "./nyaa";
 import { isShareAcgnxRSSItem } from "./share-acgnx";
 import { isOuoRSSItem } from "./ouo";
+import { Converter } from "opencc-js";
+
+const converter = Converter({ from: "tw", to: "cn" });
 
 function isSupportRSS(target: any): boolean {
     try {
@@ -41,8 +44,22 @@ function getContentFromRSSItem(item: any): string {
 export function RSS(): PomeloPlugin {
     return {
         name: "pomelo-rss",
+        onBeforeParse(context) {
+            Object.entries(context.config.rules).forEach(([_, unit]) => {
+                if (Array.isArray((unit.accept as any)[0])) {
+                    unit.accept = (unit.accept as string[][]).map((items) => {
+                        return items.map((item) => converter(item));
+                    });
+                }
+                if (Array.isArray((unit.reject as any)[0])) {
+                    unit.reject = (unit.reject as string[][]).map((items) => {
+                        return items.map((item) => converter(item));
+                    });
+                }
+            });
+        },
         async parser(target: string) {
-            const obj = await parseStringPromise(target);
+            const obj = await parseStringPromise(converter(target));
             if (isSupportRSS(obj)) {
                 return obj;
             } else {
