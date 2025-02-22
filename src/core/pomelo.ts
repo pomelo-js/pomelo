@@ -1,12 +1,11 @@
 import { resolve } from "path";
-import { getResourceString } from "../utils";
-import { errorLog, successLog, warnLog } from "../utils/log";
+import { createIntervalTimeCount, getResourceString } from "../utils";
+import { successLog, warnLog } from "../utils/log";
 import type {
     PomeloTaskContext,
     PomeloConfig,
     PomeloMatchContext,
     PomeloRuleContext,
-    PomeloRecordMap,
     PomeloPlugin,
 } from "../models";
 import { createRule, matchRule } from "./rule";
@@ -18,72 +17,55 @@ import {
 } from "../utils";
 import { PomeloRecord } from "./record";
 
-// 初始化
-async function _init({
-    configMap,
-    recordMap,
-    onlyRecord,
-}: {
-    configMap: PomeloConfig | string;
-    recordMap?: PomeloRecordMap | string;
+interface PomeloRunOptions {
     onlyRecord: boolean;
-}) {
-    try {
-        //#region 解析路径, record 路径默认与 config 路径一致
-        const configPath =
-            typeof configMap === "string" ? resolve(configMap) : resolve(".");
+}
 
-        const recordPath =
-            typeof recordMap === "string" ? resolve(recordMap) : configPath;
-        //#endregion
+// Pomelo引擎
+export class PomeloEngine {
+    private _isInited = false;
+    public config: PomeloConfig | null = null;
+    public record: PomeloRecord | null = null;
+    private context: PomeloTaskContext | null = null;
 
-        //#region 加载配置和记录
-        const config =
-            typeof configMap === "string"
-                ? checkConfig(await loadConfig(configPath))
-                : checkConfig(configMap);
-
-        let record: PomeloRecord = new PomeloRecord(config, configPath);
-        if (config.record) {
-            if (typeof recordMap === "string" || !recordMap) {
-                record = new PomeloRecord(
-                    config,
-                    configPath,
-                    await loadRecord(recordPath)
-                );
-            } else {
-                record = new PomeloRecord(config, configPath, recordMap);
-            }
+    private _checkInit() {
+        if (!this._isInited) {
+            throw "The engine has not been initialized.";
+            // errorLog("The engine has not been initialized.");
         }
-        //#endregion
+    }
 
-        //第一次执行时更新一次__record,删除过期的记录
-        record.clean();
+    //#region 初始化
+    public async init(config: PomeloConfig, record?: PomeloRecord) {}
+    public async initFromFile(configPath?: string, recordPath?: string) {
+        // 格式化路径
+        const _configPath = resolve(configPath || ".");
 
-        //#region 解析定时任务
-        const interval = parseToMillisecond(config.interval || 0);
-        const intervalTimeCount = (id: number) => {
-            console.time("interval task--" + id);
-            return () => console.timeEnd("interval task--" + id);
-        };
-        //#endregion
+        // 读取配置文件和记录文件
+        this.config = checkConfig(await loadConfig(_configPath));
+        this.record = new PomeloRecord(this.config, _configPath);
+        if (this.config.record && recordPath) {
+            this.record = new PomeloRecord(
+                this.config,
+                recordPath,
+                await loadRecord(recordPath)
+            );
+        }
 
-        //#region 封装对象上下文
-        const context: PomeloTaskContext = {
-            config,
-            record,
+        // 初始化上下文
+        this.context = {
+            config: this.config,
+            record: this.record,
             plugins: [],
             intervalTimeCount: void 0,
             downloadMap: {
                 link: {},
                 title: {},
             },
-            onlyRecord,
+            onlyRecord: false,
         };
-        //#endregion
 
         //#region 绑定 process 回调
-        //中断信号处理
         const interuptHandler = () => {
             warnLog(
                 "SIGINT event is triggered, the exit event callback will be executed soon."
@@ -99,80 +81,99 @@ async function _init({
         process.on("exit", () => {
             successLog("stop task");
             console.timeEnd("all tasks");
-            context.record.save();
+            this.context?.record.save();
         });
         //#endregion
 
-        //#region 任务调度
-        if (interval) {
-            return {
-                task: async () => {
-                    let id = 0;
-                    successLog(
-                        `start interval task, interval: ${config.interval}, current: ${id}`
-                    );
-                    context.intervalTimeCount = intervalTimeCount(id++);
-                    await _task(context);
-
-                    setInterval(async () => {
-                        successLog(
-                            `start interval task, interval: ${config.interval}, current: ${id}`
-                        );
-                        context.intervalTimeCount = intervalTimeCount(id++);
-                        await _task(context);
-                        context.record.save(); //每次定时任务结束后都要保存一次
-                    }, interval);
-                },
-                context,
-            };
-        } else {
-            return {
-                task: async () => {
-                    console.time("all tasks");
-                    successLog("start once task");
-                    await _task(context);
-                },
-                context,
-            };
-        }
-        //#endregion
-    } catch (error) {
-        errorLog(error + "");
-        return null;
+        // 完成初始化
+        this._isInited = true;
     }
-}
+    //#endregion
 
-// 一轮运行
-async function _round(context: PomeloTaskContext, url: string) {
-    const { config, plugins } = context;
-    //获取resource并且记录耗时
-    successLog("get resource from " + url);
-    console.time("get resource");
-    const resource = await getResourceString(url);
-    console.timeEnd("get resource");
+    //#region 运行
+    public async run(options?: PomeloRunOptions) {
+        this._checkInit();
 
-    //处理resource
-    let parser: PomeloPlugin["parser"] = config.resource.parser;
-    let worker: PomeloPlugin["worker"] = config.resource.worker;
-    //遍历插件，只有最后一个配置的worker和parser会生效
-    plugins.forEach((p) => {
-        parser = p.parser;
-        worker = p.worker;
-    });
-    if (parser && worker) {
-        //parse要放外面,避免重复
+        options = {
+            onlyRecord: false,
+            ...options,
+        };
+        this.context!.onlyRecord = options.onlyRecord;
+
+        const interval = parseToMillisecond(this.config!.interval || 0);
+        if (interval) {
+            let id = 0;
+            successLog(
+                `start interval task, interval: ${interval}, current: ${id}`
+            );
+            this.context!.intervalTimeCount = createIntervalTimeCount(
+                `interval task--${id++}`
+            );
+            await this._task();
+            setInterval(async () => {
+                successLog(
+                    `start interval task, interval: ${interval}, current: ${id}`
+                );
+                this.context!.intervalTimeCount = createIntervalTimeCount(
+                    `interval task--${id}`
+                );
+                await this._task();
+                // 每次定时任务结束后都要保存一次
+                this.context?.record.save();
+            }, interval);
+        } else {
+            console.time("all tasks");
+            successLog("start once task");
+            await this._task();
+        }
+    }
+    private async _task() {
+        this._checkInit();
+        if (Array.isArray(this.config!.resource.url)) {
+            for (const url of this.config!.resource.url) {
+                await this._roundTask(url);
+            }
+        } else {
+            this._roundTask(this.config!.resource.url);
+        }
+    }
+    private async _roundTask(url: string) {
+        this._checkInit();
+        const { config, plugins } = this.context!;
+
+        // 获取resource并且记录耗时
+        successLog("get resource from " + url);
+        console.time("get resource");
+        const resource = await getResourceString(url);
+        console.timeEnd("get resource");
+
+        // 处理resource
+        let parser: PomeloPlugin["parser"] = config.resource.parser;
+        let worker: PomeloPlugin["worker"] = config.resource.worker;
+
+        // 遍历插件，只有最后一个配置的worker和parser会生效
+        plugins.forEach((p) => {
+            parser = p.parser;
+            worker = p.worker;
+        });
+
+        if (!parser || !worker) {
+            throw "please support right parser and worker!";
+        }
+
+        // parse要放外面,避免重复
         const parsed = await parser(resource);
         if (!parsed) throw "the parser dont return valid analytic product";
 
-        //遍历规则集
-        //这里不需要await,不然会出现规则匹配顺序异常
+        // 遍历规则集
+        // 这里不需要await,不然会出现规则匹配顺序异常
         Object.entries(config.rules).forEach(([name, unit]) => {
             const ruleContext: PomeloRuleContext = {
                 ruleUnit: {
                     ...unit,
                     name,
                 },
-                ...context,
+                ...this.context!,
             };
             const rule = createRule(ruleContext);
 
@@ -182,7 +183,7 @@ async function _round(context: PomeloTaskContext, url: string) {
             const matchContext: PomeloMatchContext = {
                 resource,
                 rule,
-                ...context,
+                ...this.context!,
             };
 
             worker?.(parsed, (content, link) => {
@@ -192,48 +193,13 @@ async function _round(context: PomeloTaskContext, url: string) {
             plugins.forEach((p) => p.onParsed?.());
             rule.onParsed?.();
         });
-    } else {
-        throw "please support right parser and worker!";
     }
-}
+    //#endregion
 
-// 任务
-async function _task(context: PomeloTaskContext) {
-    const { config } = context;
-    if (Array.isArray(config.resource.url)) {
-        for (const url of config.resource.url) {
-            await _round(context, url);
-        }
-    } else {
-        await _round(context, config.resource.url);
+    //#region 配置插件
+    public use(plugin: PomeloPlugin) {
+        this._checkInit();
+        this.context!.plugins.push(plugin);
     }
+    //#endregion
 }
-
-export async function createPomelo({
-    config,
-    record,
-    onlyRecord = false,
-}: {
-    config: PomeloConfig | string;
-    record?: PomeloRecordMap | string;
-    onlyRecord?: boolean;
-}) {
-    try {
-        const result = await _init({
-            configMap: config,
-            recordMap: record,
-            onlyRecord,
-        });
-        if (!result) throw "init error!";
-        return {
-            task: result.task,
-            use(plugin: PomeloPlugin) {
-                result.context.plugins.push(plugin);
-            },
-        };
-    } catch (error) {
-        throw "error in createPomelo: " + error;
-    }
-}
-
-export default createPomelo;

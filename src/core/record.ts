@@ -87,6 +87,7 @@ export class PomeloRecord {
         this.path = path;
         this.accepted = new PomeloRecordPart(config, recordMap["accepted"]);
         this.rejected = new PomeloRecordPart(config, recordMap["rejected"]);
+        this.clean();
     }
     //清理过期记录
     public clean() {
