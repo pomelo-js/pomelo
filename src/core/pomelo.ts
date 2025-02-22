@@ -106,7 +106,7 @@ export class PomeloEngine {
             config: this.config!,
             record: this.record!,
             intervalTimeCount: void 0,
-            downloadMap: {
+            recordMap: {
                 link: {},
                 title: {},
             },
@@ -184,6 +184,7 @@ export class PomeloEngine {
         Object.entries(config.rules).forEach(([name, unit]) => {
             const rule = new PomeloRule({
                 name,
+                context,
                 engine: this,
                 unit,
             });

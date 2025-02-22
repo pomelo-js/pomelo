@@ -32,10 +32,4 @@ export type PomeloRuleMatcherOptions =
 export interface PomeloRuleOptions {
     replace?: Record<string, string>;
     actions?: PomeloConfig["actions"];
-    download?: {
-        /**
-         * 下载目录
-         */
-        dir?: string;
-    };
 }

@@ -1,17 +1,14 @@
+import { PomeloRule } from "../core";
 import { PomeloRecord } from "../core/record";
 import { PomeloConfig } from "./config";
 import { PomeloPlugin } from "./plugin";
-import {  PomeloRuleUnit } from "./rule";
 
 // 运行上下文
 export type PomeloRunContext = {} & PomeloBaseContext;
 
-// 规则上下文
-export type PomeloRuleContext = {
-    ruleUnit: {
-        name: string;
-    } & PomeloRuleUnit;
-} & PomeloBaseContext;
+export interface PomeloPluginContext extends PomeloRunContext {
+    rule: PomeloRule;
+}
 
 // 基础上下文
 export type PomeloBaseContext = {
@@ -19,7 +16,7 @@ export type PomeloBaseContext = {
     record: PomeloRecord;
     onlyRecord: boolean;
     intervalTimeCount?: () => void;
-    downloadMap: {
+    recordMap: {
         link: Record<string, boolean>;
         title: Record<string, boolean>;
     }; //映射下载情况

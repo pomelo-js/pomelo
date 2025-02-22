@@ -1,16 +1,16 @@
 import { PomeloConfig } from "./config";
-import { PomeloRunContext } from "./context";
+import { PomeloPluginContext, PomeloRunContext } from "./context";
 
 export type PomeloPlugin = {
     name?: string;
     onAccepted?: (
         this: PomeloPlugin,
-        context: PomeloRunContext,
+        context: PomeloPluginContext,
         item: any
     ) => void;
     onRejected?: (
         this: PomeloPlugin,
-        context: PomeloRunContext,
+        context: PomeloPluginContext,
         item: any
     ) => void;
     onBeforeParse?: (this: PomeloPlugin, context: PomeloRunContext) => void;

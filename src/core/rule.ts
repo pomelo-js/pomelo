@@ -1,4 +1,4 @@
-import { postAria2DownloadRequest, carryCommand } from "../utils";
+import { carryCommand } from "../utils";
 import { errorLog, successLog, warnLog } from "../utils/log";
 import type {
     PomeloRuleMatcherOptions,
@@ -7,6 +7,7 @@ import type {
     PomeloRuleOptions,
     PomeloRuleUnit,
     PomeloRunContext,
+    PomeloPluginContext,
 } from "../models";
 import { getResourceString as _getResource } from "../utils";
 import { isRegExpOption } from "../utils";
@@ -45,6 +46,7 @@ interface PomeloRuleCreateParams {
     name: string;
     engine: PomeloEngine;
     unit: PomeloRuleUnit;
+    context: PomeloRunContext;
 }
 export class PomeloRule {
     name: string;
@@ -70,16 +72,13 @@ export class PomeloRule {
         context: PomeloRunContext,
         item: T
     ) {
-        const { plugins } = context;
         // 先匹配拒绝条件
         if (this.reject && this.reject(item)) {
-            plugins.forEach((p) => p.onRejected?.(context, item));
             this.onRejected(context, item);
             return false;
         }
         // 再匹配接受条件
         if (this.accept && this.accept(item)) {
-            plugins.forEach((p) => p.onAccepted?.(context, item));
             this.onAccepted(context, item);
             return true;
         }
@@ -90,18 +89,14 @@ export class PomeloRule {
         command: string | string[],
         item: PomeloRuleMatchedItem
     ) {
-        const _command = this._replaceVar(command, item);
+        const _command = this.replaceVar(command, item);
         return await carryCommand(_command);
     }
     private _replaceBase(content: string, item: PomeloRuleMatchedItem) {
         content = (content + "")
             .replaceAll("{{rule.name}}", this.name)
             .replaceAll("{{item.link}}", item.link)
-            .replaceAll("{{item.title}}", item.title)
-            .replaceAll(
-                "{{rule.options.download.dir}}",
-                this.options?.download?.dir || ""
-            );
+            .replaceAll("{{item.title}}", item.title);
 
         if (this._config.replace) {
             Object.entries(this._config.replace).forEach(([key, value]) => {
@@ -116,27 +111,13 @@ export class PomeloRule {
 
         return content;
     }
-    private _replaceVar(
-        content: string | string[],
-        item: PomeloRuleMatchedItem
-    ) {
+    public replaceVar(content: string | string[], item: PomeloRuleMatchedItem) {
         if (!content) return "";
 
         if (Array.isArray(content)) {
             return content.map((str) => this._replaceBase(str, item));
         } else {
             return this._replaceBase(content, item);
-        }
-    }
-    private async _download(item: PomeloRuleMatchedItem) {
-        // 选择不同的下载方法
-        if (
-            this._config.download?.aria2 &&
-            this._config.download.aria2.enabled
-        ) {
-            console.time("3.post download request to aria2 --" + item.link);
-            await postAria2DownloadRequest(this._config, this, item);
-            console.timeEnd("3.post download request to aria2 --" + item.link);
         }
     }
     async onAcceptedAction(item: PomeloRuleMatchedItem) {
@@ -175,7 +156,7 @@ export class PomeloRule {
     }
     async onAccepted(context: PomeloRunContext, item: PomeloRuleMatchedItem) {
         const { title, link } = item;
-        const { downloadMap, onlyRecord } = context;
+        const { recordMap: downloadMap, onlyRecord, plugins } = context;
         //判断是否已经下载过了
         if (downloadMap.link[link] || downloadMap.title[title]) {
             return warnLog(title + " has been downloaded but accepted");
@@ -196,7 +177,6 @@ export class PomeloRule {
             this._record.accepted.add("title", title);
             this._record.accepted.add("link", link);
 
-            const isDownload = await this.onAcceptedAction(item);
             //判断是否仅需要记录
             if (onlyRecord) {
                 return;
@@ -205,10 +185,11 @@ export class PomeloRule {
             downloadMap.link[link] = true;
             downloadMap.title[title] = true;
 
-            // 触发 accepted hook
-            if (isDownload) {
-                await this._download(item);
-            }
+            const pluginContext = {
+                ...context,
+                rule: this,
+            };
+            plugins.forEach((p) => p.onAccepted?.(pluginContext, item));
         } catch (error) {
             // 出现错误要重置之前的操作
             this._record.accepted.delete("title", title);
@@ -218,7 +199,7 @@ export class PomeloRule {
             errorLog(`download failed!\nitem: ${title}\nerror: ${error}`);
         }
     }
-    async onRejected(_: PomeloRunContext, item: PomeloRuleMatchedItem) {
+    async onRejected(context: PomeloRunContext, item: PomeloRuleMatchedItem) {
         const { title, link } = item;
         if (
             this._record.rejected.isValid("link", link) ||
@@ -235,6 +216,12 @@ export class PomeloRule {
         successLog(`reject ${title} by [rule]: ${this.name}`);
         this._record.rejected.add("title", title);
         this._record.rejected.add("link", link);
+
+        const pluginContext = {
+            ...context,
+            rule: this,
+        };
+        context.plugins.forEach((p) => p.onRejected?.(pluginContext, item));
     }
     onBeforeParse(_: PomeloRunContext) {
         console.time("2.match rule--" + this.name);

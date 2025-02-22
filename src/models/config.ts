@@ -14,17 +14,6 @@ export interface PomeloConfig {
             handler: (content: string, link: string) => void | Promise<void>
         ) => void | Promise<void>; //处理解析后的对象
     };
-    download?: {
-        // 默认支持 aria2 & json-rpc 下载
-        dir?: string;
-        aria2?: {
-            enabled: boolean;
-            env: boolean;
-            host: string;
-            port: string;
-            token: string;
-        };
-    };
     actions?: {
         accept?: {
             download: boolean;
