@@ -75,12 +75,12 @@ class PomeloRecordPart {
 
 export class PomeloRecord {
     config: PomeloConfig;
-    path: string;
+    path?: string;
     accepted: PomeloRecordPart;
     rejected: PomeloRecordPart;
     constructor(
         config: PomeloConfig,
-        path: string,
+        path?: string,
         recordMap: PomeloRecordMap = { ...emptyRecordMap }
     ) {
         this.config = config;
@@ -96,9 +96,9 @@ export class PomeloRecord {
     }
     //保存
     public save() {
-        if (!this.config.record) return;
+        if (!this.config.record || !this.path) return;
 
-        //先清洗一遍record
+        // 先清洗一遍record
         this.clean();
         try {
             writeFileSync(join(this.path + "/__record.json"), this.toJSON());

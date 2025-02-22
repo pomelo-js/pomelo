@@ -36,8 +36,21 @@ export class PomeloEngine {
     }
 
     //#region 初始化
-    public async init(config: PomeloConfig, record?: PomeloRecord) {}
+
+    public async init(config: PomeloConfig, record?: PomeloRecord) {
+        if (this._isInited) {
+            return warnLog("The pomelo engine has been initialized.");
+        }
+
+        this.config = config;
+        this.record = record || new PomeloRecord(this.config);
+        this._initBase(this.config, this.record);
+    }
     public async initFromFile(configPath?: string, recordPath?: string) {
+        if (this._isInited) {
+            return warnLog("The pomelo engine has been initialized.");
+        }
+
         // 格式化路径
         const _configPath = resolve(configPath || ".");
 
@@ -51,11 +64,13 @@ export class PomeloEngine {
                 await loadRecord(recordPath)
             );
         }
-
+        this._initBase(this.config, this.record);
+    }
+    private async _initBase(config: PomeloConfig, record: PomeloRecord) {
         // 初始化上下文
         this.context = {
-            config: this.config,
-            record: this.record,
+            config,
+            record,
             plugins: [],
             intervalTimeCount: void 0,
             downloadMap: {
@@ -88,6 +103,7 @@ export class PomeloEngine {
         // 完成初始化
         this._isInited = true;
     }
+    
     //#endregion
 
     //#region 运行
