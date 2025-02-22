@@ -155,67 +155,65 @@ export class PomeloRule {
         }
     }
     async onAccepted(context: PomeloRunContext, item: PomeloRuleMatchedItem) {
-        const { title, link } = item;
         const { recordMap: downloadMap, onlyRecord, plugins } = context;
+        const pluginContext = {
+            ...context,
+            rule: this,
+        };
+
+        plugins.forEach((p) => p.onBeforeAccept?.(pluginContext, item));
+
         //判断是否已经下载过了
-        if (downloadMap.link[link] || downloadMap.title[title]) {
-            return warnLog(title + " has been downloaded but accepted");
+        if (downloadMap.link[item.link] || downloadMap.title[item.title]) {
+            return warnLog(item.title + " has been downloaded but accepted");
         }
         //判断是否存在有效记录
         if (
-            this._record.accepted.isValid("link", link) ||
-            this._record.accepted.isValid("title", title)
+            this._record.accepted.isValid("link", item.link) ||
+            this._record.accepted.isValid("title", item.title)
         ) {
             return warnLog(
-                `checked [record]: ${title} when accepted, download will be skipped.`
+                `checked [record]: ${item.title} when accepted, download will be skipped.`
             );
         }
         //执行下载和记录
         try {
             //打印接受日志
-            successLog(`accept ${title} by [rule]: ${this.name}`);
-            this._record.accepted.add("title", title);
-            this._record.accepted.add("link", link);
+            successLog(`accept ${item.title} by [rule]: ${this.name}`);
+            this._record.accepted.add("title", item.title);
+            this._record.accepted.add("link", item.link);
 
             //判断是否仅需要记录
             if (onlyRecord) {
                 return;
             }
 
-            downloadMap.link[link] = true;
-            downloadMap.title[title] = true;
+            downloadMap.link[item.link] = true;
+            downloadMap.title[item.title] = true;
 
-            const pluginContext = {
-                ...context,
-                rule: this,
-            };
             plugins.forEach((p) => p.onAccepted?.(pluginContext, item));
         } catch (error) {
             // 出现错误要重置之前的操作
-            this._record.accepted.delete("title", title);
-            this._record.accepted.delete("link", link);
-            downloadMap.link[link] = false;
-            downloadMap.title[title] = false;
-            errorLog(`download failed!\nitem: ${title}\nerror: ${error}`);
+            this._record.accepted.delete("title", item.title);
+            this._record.accepted.delete("link", item.link);
+            downloadMap.link[item.link] = false;
+            downloadMap.title[item.title] = false;
+            errorLog(`download failed!\nitem: ${item.title}\nerror: ${error}`);
         }
     }
     async onRejected(context: PomeloRunContext, item: PomeloRuleMatchedItem) {
-        const { title, link } = item;
         if (
-            this._record.rejected.isValid("link", link) ||
-            this._record.rejected.isValid("title", title)
+            this._record.rejected.isValid("link", item.link) ||
+            this._record.rejected.isValid("title", item.title)
         ) {
             return warnLog(
-                `checked [record]: ${title} when rejected, download will be skipped.`
+                `checked [record]: ${item.title} when rejected, download will be skipped.`
             );
         }
-        await this.onRejectedAction({
-            title,
-            link,
-        });
-        successLog(`reject ${title} by [rule]: ${this.name}`);
-        this._record.rejected.add("title", title);
-        this._record.rejected.add("link", link);
+        await this.onRejectedAction(item);
+        successLog(`reject ${item.title} by [rule]: ${this.name}`);
+        this._record.rejected.add("title", item.title);
+        this._record.rejected.add("link", item.link);
 
         const pluginContext = {
             ...context,
