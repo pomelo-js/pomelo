@@ -5,6 +5,7 @@ export interface PomeloConfig {
     record?: {
         expire: number | string;
     };
+    plugins?: Record<string, any>;
     replace?: Record<string, string>;
     resource: {
         url: string | string[];
@@ -16,7 +17,6 @@ export interface PomeloConfig {
     };
     actions?: {
         accept?: {
-            download: boolean;
             command?: string[] | string;
         };
         reject?: {

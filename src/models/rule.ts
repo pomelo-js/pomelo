@@ -32,4 +32,5 @@ export type PomeloRuleMatcherOptions =
 export interface PomeloRuleOptions {
     replace?: Record<string, string>;
     actions?: PomeloConfig["actions"];
+    plugins?: Record<string, any>;
 }

@@ -124,21 +124,14 @@ export class PomeloRule {
         const ruleAcceptHook = this.options?.actions?.accept;
         if (ruleAcceptHook && ruleAcceptHook.command) {
             await this._carryCommand(ruleAcceptHook.command, item);
-            return ruleAcceptHook.download === void 0
-                ? true
-                : ruleAcceptHook.download;
         }
 
         // 触发全局 Hook
         const globalAcceptHook = this._config.actions?.accept;
         if (globalAcceptHook && globalAcceptHook.command) {
             await this._carryCommand(globalAcceptHook.command, item);
-            return globalAcceptHook.download === void 0
-                ? true
-                : globalAcceptHook.download;
         }
 
-        return true;
     }
     async onRejectedAction(item: PomeloRuleMatchedItem) {
         // 触发规则 Hook

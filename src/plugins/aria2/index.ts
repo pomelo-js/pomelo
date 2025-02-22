@@ -25,11 +25,11 @@ export function Aria2(): PomeloPlugin {
             console.time(_mark);
 
             const { config, rule } = context;
-            const globalDownloadOptions = (config as any)
-                .aria2 as GlobalDownloadOptions;
+            const globalDownloadOptions = (config as any).plugins
+                ?.aria2 as GlobalDownloadOptions;
 
-            const ruleDownloadOptions = (rule as any)
-                .aria2 as RuleDownloadOptions;
+            const ruleDownloadOptions = (rule as any).plugins
+                ?.aria2 as RuleDownloadOptions;
 
             if (!globalDownloadOptions && !ruleDownloadOptions) {
                 return;
