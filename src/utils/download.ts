@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
-import { PomeloRule, PomeloRuleMatchedItem } from "../models/rule";
+import { PomeloRuleMatchedItem } from "../models/rule";
+import { PomeloRule } from "../core/rule";
 import { PomeloConfig } from "../models/config";
 import { resolve } from "path";
 import { get } from "node:http";

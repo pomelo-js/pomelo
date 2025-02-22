@@ -49,7 +49,7 @@ export function RSS(): PomeloPlugin {
                 throw "unsupported RSS feeds, please replace them with supported RSS feeds.";
             }
         },
-        async worker(resource: object, handler) {
+        async worker(resource, handler) {
             for (const ch of (resource as any).rss.channel) {
                 for (const item of ch.item) {
                     await handler(

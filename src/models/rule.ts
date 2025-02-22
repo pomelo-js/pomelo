@@ -1,32 +1,8 @@
 import { PomeloConfig } from "./config";
 
-export type PomeloHandler = (content: string) => boolean;
-export interface PomeloRule {
-    name: string;
-    resource?: PomeloConfig["resource"];
-    options: PomeloRuleOptions;
-    accept?: PomeloHandler;
-    reject?: PomeloHandler;
-    _download: (item: PomeloRuleMatchedItem) => Promise<void> | void;
-    _replaceVar: (
-        content: string | string[],
-        item: PomeloRuleMatchedItem
-    ) => string | string[];
-    _replaceBase: (content: string, item: PomeloRuleMatchedItem) => string;
-    _carryCommand: (
-        command: string | string[],
-        item: PomeloRuleMatchedItem
-    ) => Promise<void> | void;
-    onBeforeParse?: () => void;
-    onParsed?: () => void;
-    onAccepted?: (title: string, link: string) => Promise<void>;
-    onRejected?: (title: string, link: string) => void;
-    onAcceptedAction: (
-        item: PomeloRuleMatchedItem
-    ) => boolean | Promise<boolean>;
-    onRejectedAction: (item: PomeloRuleMatchedItem) => void | Promise<void>;
-}
-
+export type PomeloMatcher<
+    T extends PomeloRuleMatchedItem = PomeloRuleMatchedItem
+> = (item: T) => boolean;
 export interface PomeloRuleMatchedItem {
     link: string;
     title: string;
@@ -41,17 +17,17 @@ export interface PomeloRegExp {
     flag: string;
 }
 export interface PomeloRuleUnit {
-    options: PomeloRuleOptions;
-    accept: RuleHandlerOptions;
-    reject: RuleHandlerOptions;
+    options?: PomeloRuleOptions;
+    accept: PomeloRuleMatcherOptions;
+    reject: PomeloRuleMatcherOptions;
 }
 
-export type RuleHandlerOptions =
+export type PomeloRuleMatcherOptions =
     | PomeloRegExp[][]
     | string[][]
     | string
     | PomeloRegExp
-    | PomeloHandler;
+    | PomeloMatcher;
 
 export interface PomeloRuleOptions {
     replace?: Record<string, string>;

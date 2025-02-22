@@ -10,7 +10,7 @@ const configPath = resolve(args.d === true ? "./" : args.d || "./");
 
 const engine = new PomeloEngine();
 await engine.initFromFile(configPath);
-engine.use(RSS());
 engine.run({
     onlyRecord,
+    plugins: [RSS()],
 });
