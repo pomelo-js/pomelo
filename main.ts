@@ -1,4 +1,4 @@
-import { PomeloEngine, RSS, Aria2 } from "./src";
+import { PomeloEngine, RSS, Aria2, OpenCC } from "./src";
 import { resolve } from "path";
 import minimist from "minimist";
 
@@ -12,5 +12,5 @@ const engine = new PomeloEngine();
 await engine.initFromFile(configPath);
 engine.run({
     onlyRecord,
-    plugins: [Aria2(), RSS()],
+    plugins: [OpenCC(), Aria2(), RSS()],
 });
