@@ -92,10 +92,14 @@ export class PomeloRule {
         return await carryCommand(_command);
     }
     private _replaceBase(content: string, item: PomeloRuleMatchedItem) {
+        
         content = (content + "")
             .replaceAll("{{rule.name}}", this.name)
             .replaceAll("{{item.link}}", item.link)
-            .replaceAll("{{item.title}}", item.title);
+            .replaceAll("{{item.title}}", item.title)
+            .replaceAll("{{encodeURI(item.title)}}", encodeURI(item.title))
+            .replaceAll("{{encodeURI(item.link)}}", encodeURI(item.link))
+            .replaceAll("{{encodeURI(rule.name)}}", encodeURI(this.name));
 
         if (this._config.replace) {
             Object.entries(this._config.replace).forEach(([key, value]) => {
@@ -131,7 +135,6 @@ export class PomeloRule {
         if (globalAcceptHook && globalAcceptHook.command) {
             await this._carryCommand(globalAcceptHook.command, item);
         }
-
     }
     async onRejectedAction(item: PomeloRuleMatchedItem) {
         // 触发规则 Hook
