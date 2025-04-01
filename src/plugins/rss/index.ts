@@ -18,11 +18,44 @@ function isSupportRSS(target: any): boolean {
     }
 }
 
-function getURLFromRSSItem(item: any): string {
-    if (isMikanamiRSSItem(item) || isShareAcgnxRSSItem(item)) {
-        return item.enclosure[0].$.url;
-    } else if (isNyaaRSSItem(item) || isOuoRSSItem(item)) {
-        return item.link[0];
+function getURLFromRSSItem(item: any): {
+    link: string;
+    magnet: string;
+    torrent: string;
+} {
+    if (isMikanamiRSSItem(item)) {
+        const hash = item.enclosure[0].$.url.split("/").pop();
+        return {
+            link: item.enclosure[0].$.url,
+            magnet: `magnet:?xt=urn:btih:${hash}`,
+            torrent: item.enclosure[0].$.url,
+        };
+    } else if (isShareAcgnxRSSItem(item)) {
+        const hash = item.enclosure[0].$.url
+            .split("magnet:?xt=urn:btih:")
+            .pop()
+            ?.split("&tr")
+            .shift();
+        const date = new Date(item.pubDate[0]).getTime() / 1000;
+        const torrent = `https://share.acgnx.se/down.php?date=${date}&hash=${hash}`;
+        return {
+            link: item.enclosure[0].$.url,
+            magnet: item.enclosure[0].$.url,
+            torrent,
+        };
+    } else if (isNyaaRSSItem(item)) {
+        return {
+            link: item.link[0],
+            magnet: `magnet:?xt=urn:btih:${item["nyaa:infoHash"]?.[0]}`,
+            torrent: item.link[0],
+        };
+    } else if (isOuoRSSItem(item)) {
+        const hash = item.link[0].split("/").pop();
+        return {
+            link: item.link[0],
+            magnet: `magnet:?xt=urn:btih:${hash}`,
+            torrent: item.link[0],
+        };
     } else {
         throw "Wrong RSSItem";
     }
@@ -69,15 +102,12 @@ export function RSS(): PomeloPlugin {
         async worker(_, resource, handler) {
             for (const ch of (resource as any).rss.channel) {
                 for (const item of ch.item) {
-                    await handler(
-                        getContentFromRSSItem(item),
-                        getURLFromRSSItem(item),
-                        {
-                            replace: {
-                                ...getReplaceFromNyaaRSSItem(item),
-                            },
-                        }
-                    );
+                    const URL = getURLFromRSSItem(item);
+                    const title = getContentFromRSSItem(item);
+                    await handler({
+                        title,
+                        ...URL,
+                    });
                 }
             }
         },

@@ -99,6 +99,8 @@ export class PomeloRule {
             .replaceAll("{{rule.name}}", this.name)
             .replaceAll("{{item.link}}", item.link)
             .replaceAll("{{item.title}}", item.title)
+            .replaceAll("{{item.magnet}}", item.magnet)
+            .replaceAll("{{item.torrent}}", item.torrent)
             .replaceAll("{{encodeURI(item.title)}}", encodeURI(item.title))
             .replaceAll("{{encodeURI(item.link)}}", encodeURI(item.link))
             .replaceAll("{{encodeURI(rule.name)}}", encodeURI(this.name));

@@ -1,5 +1,5 @@
 import { PomeloRule } from "../core";
-import { PomeloRuleMap } from "./rule";
+import { PomeloRuleMap, PomeloRuleMatchedItem } from "./rule";
 
 export interface PomeloConfig {
     interval?: number | string;
@@ -14,11 +14,7 @@ export interface PomeloConfig {
         worker?: (
             rule: PomeloRule,
             resource: object,
-            handler: (
-                content: string,
-                link: string,
-                payload?: Record<string, any>
-            ) => void | Promise<void>
+            handler: (item: PomeloRuleMatchedItem) => void | Promise<void>
         ) => void | Promise<void>; //处理解析后的对象
     };
     actions?: {

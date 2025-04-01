@@ -7,6 +7,8 @@ export type PomeloMatcher<
 export interface PomeloRuleMatchedItem {
     link: string;
     title: string;
+    magnet: string;
+    torrent: string;
     payload?: PomeloPayload;
 }
 
