@@ -1,3 +1,4 @@
+import { PomeloPayload } from "./common";
 import { PomeloConfig } from "./config";
 
 export type PomeloMatcher<
@@ -6,6 +7,7 @@ export type PomeloMatcher<
 export interface PomeloRuleMatchedItem {
     link: string;
     title: string;
+    payload?: PomeloPayload;
 }
 
 export type PomeloRuleMap = {

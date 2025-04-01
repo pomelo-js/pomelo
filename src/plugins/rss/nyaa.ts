@@ -96,3 +96,9 @@ export function isNyaaRSSItem(item: any): item is NyaaRSSItem {
         return false;
     }
 }
+
+export function getReplaceFromNyaaRSSItem(item: NyaaRSSItem): Record<string, string> {
+    return {
+        "nyaa:infoHash": item["nyaa:infoHash"][0],
+    };
+}

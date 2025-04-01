@@ -191,8 +191,8 @@ export class PomeloEngine {
 
             rule.onBeforeParse?.(context);
 
-            worker?.(parsed, (title, link) => {
-                rule.match(context, { title, link });
+            worker?.(rule, parsed, (title, link, payload) => {
+                rule.match(context, { title, link, payload });
             });
 
             plugins.forEach((p) => p.onParsed?.(context));

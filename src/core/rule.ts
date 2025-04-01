@@ -11,6 +11,7 @@ import type {
 import { getResourceString as _getResource } from "../utils";
 import { isRegExpOption } from "../utils";
 import { PomeloEngine } from "./pomelo";
+import { PomeloPayload } from "../models/common";
 
 // 创建匹配器
 function createMatcher(
@@ -49,6 +50,7 @@ interface PomeloRuleCreateParams {
 }
 export class PomeloRule {
     name: string;
+    payload: PomeloPayload;
     engine: PomeloEngine;
     options?: PomeloRuleOptions;
     accept?: PomeloMatcher;
@@ -66,6 +68,7 @@ export class PomeloRule {
         this.options = unit.options;
         this.accept = createMatcher(unit.accept);
         this.reject = createMatcher(unit.reject);
+        this.payload = {};
     }
     public match<T extends PomeloRuleMatchedItem>(
         context: PomeloRunContext,
@@ -92,7 +95,6 @@ export class PomeloRule {
         return await carryCommand(_command);
     }
     private _replaceBase(content: string, item: PomeloRuleMatchedItem) {
-        
         content = (content + "")
             .replaceAll("{{rule.name}}", this.name)
             .replaceAll("{{item.link}}", item.link)
@@ -101,11 +103,18 @@ export class PomeloRule {
             .replaceAll("{{encodeURI(item.link)}}", encodeURI(item.link))
             .replaceAll("{{encodeURI(rule.name)}}", encodeURI(this.name));
 
+        if (item.payload?.replace) {
+            Object.entries(item.payload?.replace).forEach(([key, value]) => {
+                content = content.replaceAll(`{{${key}}}`, value);
+            });
+        }
+
         if (this._config.replace) {
             Object.entries(this._config.replace).forEach(([key, value]) => {
                 content = content.replaceAll(key, value);
             });
         }
+
         if (this.options?.replace) {
             Object.entries(this.options?.replace).forEach(([key, value]) => {
                 content = content.replaceAll(key, value);

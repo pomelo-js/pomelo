@@ -1,7 +1,7 @@
 import { parseStringPromise } from "xml2js";
 import { PomeloPlugin } from "../../models";
 import { isMikanamiRSSItem } from "./mikanani";
-import { isNyaaRSSItem } from "./nyaa";
+import { getReplaceFromNyaaRSSItem, isNyaaRSSItem } from "./nyaa";
 import { isShareAcgnxRSSItem } from "./share-acgnx";
 import { isOuoRSSItem } from "./ouo";
 import { Converter } from "opencc-js";
@@ -76,12 +76,17 @@ export function RSS(): PomeloPlugin {
                 throw "unsupported RSS feeds, please replace them with supported RSS feeds.";
             }
         },
-        async worker(resource, handler) {
+        async worker(_, resource, handler) {
             for (const ch of (resource as any).rss.channel) {
                 for (const item of ch.item) {
                     await handler(
                         getContentFromRSSItem(item),
-                        getURLFromRSSItem(item)
+                        getURLFromRSSItem(item),
+                        {
+                            replace: {
+                                ...getReplaceFromNyaaRSSItem(item),
+                            },
+                        }
                     );
                 }
             }
