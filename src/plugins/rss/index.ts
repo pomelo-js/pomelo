@@ -81,12 +81,12 @@ export function RSS(): PomeloPlugin {
             Object.entries(context.config.rules).forEach(([_, unit]) => {
                 if (Array.isArray((unit.accept as any)[0])) {
                     unit.accept = (unit.accept as string[][]).map((items) => {
-                        return items.map((item) => converter(item));
+                        return items.map((item) => converter(item + ""));
                     });
                 }
                 if (Array.isArray((unit.reject as any)[0])) {
                     unit.reject = (unit.reject as string[][]).map((items) => {
-                        return items.map((item) => converter(item));
+                        return items.map((item) => converter(item + ""));
                     });
                 }
             });
