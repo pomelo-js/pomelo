@@ -18,7 +18,7 @@ const emptyRecordMap: PomeloRecordMap = {
     rejected: { ...emptyRecordPartMap },
 };
 
-class PomeloRecordPart {
+class PomeloRecordComponent {
     map: PomeloRecordPartMap;
     config: PomeloConfig;
     constructor(
@@ -75,18 +75,25 @@ class PomeloRecordPart {
 
 export class PomeloRecord {
     config: PomeloConfig;
-    path: string;
-    accepted: PomeloRecordPart;
-    rejected: PomeloRecordPart;
+    path?: string;
+    accepted: PomeloRecordComponent;
+    rejected: PomeloRecordComponent;
     constructor(
         config: PomeloConfig,
-        path: string,
+        path?: string,
         recordMap: PomeloRecordMap = { ...emptyRecordMap }
     ) {
         this.config = config;
         this.path = path;
-        this.accepted = new PomeloRecordPart(config, recordMap["accepted"]);
-        this.rejected = new PomeloRecordPart(config, recordMap["rejected"]);
+        this.accepted = new PomeloRecordComponent(
+            config,
+            recordMap["accepted"]
+        );
+        this.rejected = new PomeloRecordComponent(
+            config,
+            recordMap["rejected"]
+        );
+        this.clean();
     }
     //清理过期记录
     public clean() {
@@ -95,9 +102,9 @@ export class PomeloRecord {
     }
     //保存
     public save() {
-        if (!this.config.record) return;
+        if (!this.config.record || !this.path) return;
 
-        //先清洗一遍record
+        // 先清洗一遍record
         this.clean();
         try {
             writeFileSync(join(this.path + "/__record.json"), this.toJSON());

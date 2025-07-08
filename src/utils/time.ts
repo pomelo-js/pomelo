@@ -40,3 +40,8 @@ export function getFormattedTime(showYear: boolean = false) {
         ? `${formattedDate} ${formattedMoment}`
         : `${formattedMoment}`;
 }
+
+export function createIntervalTimeCount(text: string) {
+    console.time(text);
+    return () => console.timeEnd(text);
+}

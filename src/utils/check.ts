@@ -17,7 +17,7 @@ function checkHost(host: string) {
 // checker
 export function checkConfig(config: PomeloConfig) {
     try {
-        const { interval, resource, record, download } = config;
+        const { interval, resource, record } = config;
         //检查interval
         if (interval && typeof interval === "string") {
             switch (interval[interval.length - 1]) {
