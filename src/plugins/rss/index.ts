@@ -79,12 +79,12 @@ export function RSS(): PomeloPlugin {
         name: "pomelo-rss",
         onBeforeParse(context) {
             Object.entries(context.config.rules).forEach(([_, unit]) => {
-                if (Array.isArray((unit.accept as any)[0])) {
+                if (unit.accept && Array.isArray((unit.accept as any)[0])) {
                     unit.accept = (unit.accept as string[][]).map((items) => {
                         return items.map((item) => converter(item + ""));
                     });
                 }
-                if (Array.isArray((unit.reject as any)[0])) {
+                if (unit.reject && Array.isArray((unit.reject as any)[0])) {
                     unit.reject = (unit.reject as string[][]).map((items) => {
                         return items.map((item) => converter(item + ""));
                     });
