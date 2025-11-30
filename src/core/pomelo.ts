@@ -1,6 +1,6 @@
 import { resolve } from "path";
 import { createIntervalTimeCount, getResourceString } from "../utils";
-import { successLog, warnLog } from "../utils/log";
+import { errorLog, successLog, warnLog } from "../utils/log";
 import type { PomeloRunContext, PomeloConfig, PomeloPlugin } from "../models";
 import { PomeloRule } from "./rule";
 import {
@@ -143,10 +143,18 @@ export class PomeloEngine {
         const url = this.config!.resource.url;
         if (Array.isArray(url)) {
             for (const _url of url) {
-                await this._roundTask(context, _url);
+                try {
+                    await this._roundTask(context, _url);
+                } catch (error) {
+                    errorLog(`task url ${_url} failed: ` + error);
+                }
             }
         } else {
-            this._roundTask(context, url);
+            try {
+                await this._roundTask(context, url);
+            } catch (error) {
+                errorLog(`task url ${url} failed: ` + error);
+            }
         }
     }
     private async _roundTask(context: PomeloRunContext, url: string) {
